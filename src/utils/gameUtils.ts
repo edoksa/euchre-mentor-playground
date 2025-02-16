@@ -58,11 +58,45 @@ export const dealCards = (deck: Card[]): { hands: Card[][]; remainingDeck: Card[
   }
 };
 
+// Helper to get the corresponding left bower suit
+const getLeftBowerSuit = (trump: Suit): Suit => {
+  switch (trump) {
+    case "hearts": return "diamonds";
+    case "diamonds": return "hearts";
+    case "spades": return "clubs";
+    case "clubs": return "spades";
+  }
+};
+
+// Helper to determine if a card is effectively trump (including bowers)
+const isTrumpCard = (card: Card, trump: Suit): boolean => {
+  if (card.suit === trump) return true;
+  if (card.rank === "J" && card.suit === getLeftBowerSuit(trump)) return true;
+  return false;
+};
+
+// Helper to get effective suit of a card (considering bowers)
+const getEffectiveSuit = (card: Card, trump: Suit): Suit => {
+  if (card.rank === "J" && card.suit === getLeftBowerSuit(trump)) return trump;
+  return card.suit;
+};
+
 export const isValidPlay = (card: Card, hand: Card[], trick: Card[], trump: Suit): boolean => {
   if (trick.length === 0) return true;
-  const leadSuit = trick[0].suit;
-  const hasSuit = hand.some((c) => c.suit === leadSuit);
-  return !hasSuit || card.suit === leadSuit;
+  
+  const leadCard = trick[0];
+  const leadSuit = getEffectiveSuit(leadCard, trump);
+  
+  // Check if player has any cards of the lead suit (considering bowers)
+  const hasSuit = hand.some(c => getEffectiveSuit(c, trump) === leadSuit);
+  
+  // If player has lead suit, they must play it
+  if (hasSuit) {
+    return getEffectiveSuit(card, trump) === leadSuit;
+  }
+  
+  // If player doesn't have lead suit, they can play anything
+  return true;
 };
 
 export const determineWinner = (trick: Card[], trump: Suit): number => {
