@@ -232,8 +232,17 @@ const EuchreGame: React.FC = () => {
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
         <div className="flex gap-4 md:gap-8">
           {trickCards.map((card, i) => {
-            const playersLeft = trickCards.length - i;
-            const playerIndex = ((currentPlayer - playersLeft) + 4) % 4;
+            const leadingPlayer = ((currentPlayer - trickCards.length) + 4) % 4;
+            const playerIndex = (leadingPlayer + i) % 4;
+            
+            console.log('Card label calculation:', {
+              cardIndex: i,
+              leadingPlayer,
+              playerIndex,
+              playerName: players[playerIndex]?.name,
+              totalCards: trickCards.length,
+              currentPlayer
+            });
             
             return (
               <div key={`trick-card-${i}`} className="text-center">
