@@ -17,15 +17,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [state]);
 
   useEffect(() => {
-    if (state.shouldClearTrick) {
-      const timer = setTimeout(() => {
-        dispatch({ type: "CLEAR_TRICK" });
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [state.shouldClearTrick]);
-
-  useEffect(() => {
     if (state.phase !== "pre-game" && state.players[state.currentPlayer]?.isCPU && !state.shouldClearTrick) {
       const timer = setTimeout(() => {
         dispatch({ type: "CPU_PLAY" });

@@ -19,7 +19,7 @@ import {
 
 const EuchreGame: React.FC = () => {
   const { state, dispatch } = useGame();
-  const { players = [], currentPlayer = 0, dealer = 0, trickCards = [], trump, phase = "pre-game", learningMode = false, scores = [0, 0], trumpSelector = 0 } = state || {};
+  const { players = [], currentPlayer = 0, dealer = 0, trickCards = [], trump, phase = "pre-game", learningMode = false, scores = [0, 0], trumpSelector = 0, shouldClearTrick = false } = state || {};
   const isMobile = useIsMobile();
   const [showRules, setShowRules] = useState(false);
   const [goingAlone, setGoingAlone] = useState(false);
@@ -85,6 +85,10 @@ const EuchreGame: React.FC = () => {
   const handleNewGame = () => {
     localStorage.removeItem("euchre_game_state");
     window.location.reload();
+  };
+
+  const handleNextTrick = () => {
+    dispatch({ type: "CLEAR_TRICK" });
   };
 
   if (phase === "pre-game") {
@@ -230,35 +234,39 @@ const EuchreGame: React.FC = () => {
 
       {/* Center trick area */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-        <div className="flex gap-4 md:gap-8">
-          {trickCards.map((card, i) => {
-            const leadingPlayer = ((currentPlayer - trickCards.length) + 4) % 4;
-            const playerIndex = (leadingPlayer + i) % 4;
-            
-            console.log('Card label calculation:', {
-              cardIndex: i,
-              leadingPlayer,
-              playerIndex,
-              playerName: players[playerIndex]?.name,
-              totalCards: trickCards.length,
-              currentPlayer
-            });
-            
-            return (
-              <div key={`trick-card-${i}`} className="text-center">
-                <p className="text-white text-xs md:text-sm mb-1">
-                  {players[playerIndex]?.name || "Unknown"}
-                </p>
-                <Card
-                  card={card}
-                  isPlayable={false}
-                  className={`transform transition-all duration-300 ${
-                    isMobile ? "scale-75" : "scale-90"
-                  } animate-card-deal`}
-                />
-              </div>
-            );
-          })}
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex gap-4 md:gap-8">
+            {trickCards.map((card, i) => {
+              const leadingPlayer = ((currentPlayer - trickCards.length) + 4) % 4;
+              const playerIndex = (leadingPlayer + i) % 4;
+              
+              return (
+                <div key={`trick-card-${i}`} className="text-center">
+                  <p className="text-white text-xs md:text-sm mb-1">
+                    {players[playerIndex]?.name || "Unknown"}
+                  </p>
+                  <Card
+                    card={card}
+                    isPlayable={false}
+                    className={`transform transition-all duration-300 ${
+                      isMobile ? "scale-75" : "scale-90"
+                    } animate-card-deal`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Next Trick Button */}
+          {trickCards.length === 4 && currentPlayer === 0 && (
+            <Button 
+              onClick={handleNextTrick}
+              className="mt-4 bg-white/90 hover:bg-white shadow-lg"
+              size={isMobile ? "sm" : "default"}
+            >
+              Next Trick
+            </Button>
+          )}
         </div>
       </div>
 
