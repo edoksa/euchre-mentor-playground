@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { type Card as CardType } from "@/types/game";
@@ -117,13 +116,25 @@ const EuchreGame: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        <Dialog open={showRules} onOpenChange={setShowRules}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Euchre Rules</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-sm">
+              {getGameRules().split('\n').filter(Boolean).map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-table p-2 md:p-4 relative">
-      {/* Game Controls */}
       <div className="fixed top-2 md:top-4 left-2 md:left-4 flex flex-col gap-2">
         <Button
           variant="outline"
@@ -168,7 +179,6 @@ const EuchreGame: React.FC = () => {
 
       {phase !== "pre-game" && players && (
         <>
-          {/* CPU Players */}
           <div className="flex justify-between mb-4 md:mb-8">
             {players.slice(1).map((player, i) => (
               <div key={player.id} className="text-center">
@@ -192,7 +202,6 @@ const EuchreGame: React.FC = () => {
             ))}
           </div>
 
-          {/* Trick Area - Centered */}
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
             <div className="flex gap-4 md:gap-8">
               {trickCards.map((card, i) => (
@@ -212,7 +221,6 @@ const EuchreGame: React.FC = () => {
             </div>
           </div>
 
-          {/* Player's Hand */}
           <div className="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2">
             <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
               <p className="text-white text-xs md:text-base">Your Hand</p>
@@ -236,7 +244,6 @@ const EuchreGame: React.FC = () => {
         </>
       )}
 
-      {/* Bidding UI */}
       {phase === "bidding" && currentPlayer === 0 && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 p-3 md:p-4 rounded-lg shadow-lg animate-fade-in">
           <p className="text-base md:text-lg font-bold mb-2 md:mb-4">Select Trump Suit or Pass</p>
@@ -268,14 +275,13 @@ const EuchreGame: React.FC = () => {
         </div>
       )}
 
-      {/* Rules Dialog */}
       <Dialog open={showRules} onOpenChange={setShowRules}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Euchre Rules</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 text-sm">
-            {getGameRules().split('\n').map((line, i) => (
+            {getGameRules().split('\n').filter(Boolean).map((line, i) => (
               <p key={i}>{line}</p>
             ))}
           </div>
