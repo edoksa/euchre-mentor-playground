@@ -111,14 +111,39 @@ export const getTip = (
 
 export const getGameRules = (): string => {
   return `
-Euchre is a trick-taking card game played with 24 cards (9 through Ace).
-- Teams of 2 players compete to win tricks
-- First team to 10 points wins
-- Trump suit makes cards of that suit more powerful
-- Must follow suit if possible
-- Highest trump card wins, or highest card of led suit if no trump played
-- Each trick won counts as 1 point
-- Making all 5 tricks (march) scores 2 points
+Euchre is a card game played with 4 players in 2 teams of 2 players each.
+
+Basic Concepts:
+- The game uses a special 24-card deck (only 9, 10, Jack, Queen, King, and Ace of each suit)
+- Players sit across from their teammate
+- Each hand consists of dealing 5 cards to each player
+- One suit is chosen as "trump" for each hand, making it more powerful than other suits
+
+What is Trump?
+- Trump is the most powerful suit in each hand
+- Cards of the trump suit beat any card of other suits
+- When a trump suit is chosen, that suit's cards become the highest-ranking cards
+
+What is a Trick?
+- A trick is one round where each player plays one card
+- The first player leads by playing any card
+- Other players must follow suit (play the same suit) if they can
+- If you can't follow suit, you can play any card
+- The highest card of the led suit wins, unless a trump card is played
+- Trump cards beat all other suits
+
+Scoring:
+- Each hand has 5 tricks total
+- The team that wins 3 or more tricks scores 1 point
+- If a team wins all 5 tricks (called a "march"), they score 2 points
+- First team to reach 10 points wins the game
+
+Playing Order:
+1. Cards are dealt (5 to each player)
+2. Players bid to choose the trump suit
+3. Players take turns playing cards clockwise
+4. Highest card wins each trick
+5. After 5 tricks, points are awarded
   `;
 };
 
