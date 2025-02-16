@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -84,6 +85,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         passCount: 0,
       };
     }
+
     case "PASS": {
       const newPassCount = state.passCount + 1;
       const nextPlayer = (state.currentPlayer + 1) % 4;
@@ -103,6 +105,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         passCount: newPassCount,
       };
     }
+
     case "SET_TRUMP": {
       return {
         ...state,
@@ -112,13 +115,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         currentPlayer: (state.dealer + 1) % 4,
       };
     }
+
     case "PLAY_CARD": {
       if (!state.trump) return state;
 
       const currentPlayer = state.players[state.currentPlayer];
       if (!currentPlayer || !currentPlayer.hand) return state;
-
-      if (state.trickCards.length >= 4) return state;
 
       const newHand = currentPlayer.hand.filter((c) => c.id !== action.card.id);
       const newTrickCards = [...state.trickCards, action.card];
@@ -130,12 +132,13 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ),
         trickCards: newTrickCards,
         currentPlayer: (state.currentPlayer + 1) % 4,
+        shouldClearTrick: false,
       };
 
       if (newTrickCards.length === 4) {
         const winner = determineWinner(newTrickCards, state.trump);
         const team = winner % 2;
-        const newScores: [number, number] = [state.scores[0], state.scores[1]];
+        const newScores: [number, number] = [...state.scores];
         newScores[team]++;
 
         newState = {
@@ -145,16 +148,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           shouldClearTrick: true,
         };
 
-        toast(`Team ${team + 1} wins the trick!`, {
-          duration: 2000,
+        toast.success(`Team ${team + 1} wins the trick!`, {
+          duration: 1500,
         });
       }
 
       return newState;
     }
+
     case "CPU_PLAY": {
       const cpu = state.players[state.currentPlayer];
-      if (!cpu || !cpu.isCPU || !cpu.hand) return state;
+      if (!cpu || !cpu.isCPU || !cpu.hand || state.shouldClearTrick) return state;
 
       if (state.phase === "bidding") {
         const shouldPass = Math.random() > 0.3;
@@ -169,8 +173,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
       if (!state.trump) return state;
       
-      if (state.shouldClearTrick) return state;
-      
       const playableCards = cpu.hand.filter((c) =>
         isValidPlay(c, cpu.hand, state.trickCards, state.trump)
       );
@@ -180,13 +182,31 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)];
       return gameReducer(state, { type: "PLAY_CARD", card: cardToPlay });
     }
+
     case "CLEAR_TRICK": {
+      // Check if all cards have been played (5 tricks)
+      const allHandsEmpty = state.players.every(p => p.hand.length === 0);
+      if (allHandsEmpty) {
+        toast.info("Hand complete! Dealing new cards...", {
+          duration: 1500,
+        });
+        // Start a new hand
+        return {
+          ...state,
+          phase: "dealing",
+          trickCards: [],
+          shouldClearTrick: false,
+          dealer: (state.dealer + 1) % 4,
+        };
+      }
+
       return {
         ...state,
         trickCards: [],
         shouldClearTrick: false,
       };
     }
+
     default:
       return state;
   }
@@ -235,10 +255,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (state.shouldClearTrick) {
       const timer = setTimeout(() => {
         dispatch({ type: "CLEAR_TRICK" });
-      }, 2000);
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [state.shouldClearTrick]);
+
+  // Add CPU play effect
+  useEffect(() => {
+    if (state.phase !== "pre-game" && state.players[state.currentPlayer]?.isCPU && !state.shouldClearTrick) {
+      const timer = setTimeout(() => {
+        dispatch({ type: "CPU_PLAY" });
+      }, 750);
+      return () => clearTimeout(timer);
+    }
+  }, [state.currentPlayer, state.phase, state.shouldClearTrick]);
 
   return (
     <GameContext.Provider value={{ state, dispatch }}>
