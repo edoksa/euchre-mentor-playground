@@ -126,7 +126,12 @@ export const getTip = (
     // Must follow suit
     const canWinTrick = followingSuit.some(card => canBeatCard(card, highestPlayed, trump));
     if (canWinTrick) {
-      return "You can win this trick - play your highest card in the led suit!";
+      const lowestWinningCard = followingSuit
+        .filter(card => canBeatCard(card, highestPlayed, trump))
+        .reduce((lowest, card) => 
+          RANKS.indexOf(card.rank) < RANKS.indexOf(lowest.rank) ? card : lowest
+        );
+      return `You can win this trick - play your ${lowestWinningCard.rank} of ${lowestWinningCard.suit} to win efficiently.`;
     } else {
       return "You can't win this trick - play your lowest card in the led suit to save stronger cards for later.";
     }
@@ -137,15 +142,24 @@ export const getTip = (
     // Can't follow suit but have trump
     const highestTrumpPlayed = trick.find(c => c.suit === trump);
     if (!highestTrumpPlayed) {
-      return "Consider trumping to win the trick!";
+      // No trump played yet
+      const remainingPlayers = 3 - trick.length;
+      if (remainingPlayers > 1) {
+        return "Consider saving your trump - other players might trump in after you.";
+      }
+      return "Consider trumping to win the trick - you're the last player who could trump!";
     } else if (trumpCards.some(card => canBeatCard(card, highestTrumpPlayed, trump))) {
-      return "You can over-trump to win the trick!";
+      return "You can over-trump to win the trick - but consider if it's worth using your high trump now.";
     } else {
       return "Save your trump cards - you can't win this trick.";
     }
   }
 
-  return "You can't follow suit or trump - discard your lowest card.";
+  // Can't follow suit and no trump
+  const lowestCard = hand.reduce((lowest, card) => 
+    RANKS.indexOf(card.rank) < RANKS.indexOf(lowest.rank) ? card : lowest
+  );
+  return `Discard your ${lowestCard.rank} of ${lowestCard.suit} since you can't win this trick.`;
 };
 
 export const getGameRules = (): string => {
