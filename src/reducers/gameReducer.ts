@@ -146,32 +146,38 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       };
 
       if (newTrickCards.length === (state.goingAlone ? 3 : 4)) {
-        // Calculate who led the trick
-        const leadPosition = (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
+        // Find the player who led the trick
+        const firstPlayerOfTrick = (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
         
-        // Calculate winner based on the cards played
-        const winningPosition = determineWinner(newTrickCards, state.trump);
+        // Find which card position won (0-3)
+        const winningCardPosition = determineWinner(newTrickCards, state.trump);
         
-        // Calculate actual winner position relative to who led
-        const actualWinnerPosition = (leadPosition + winningPosition) % 4;
+        // Calculate the actual winner by adding the winning position to the first player
+        const trickWinner = (firstPlayerOfTrick + winningCardPosition) % 4;
         
-        // Update scores for the winning team
-        const winningTeam = actualWinnerPosition % 2;
-        const newScores = [...state.scores] as [number, number];
-        newScores[winningTeam]++;
+        const newScores = [...state.scores];
+        newScores[trickWinner % 2]++;
 
-        toast.success(`${state.players[actualWinnerPosition].name} wins the trick!`, {
+        console.log('Trick details:', {
+          firstPlayerOfTrick,
+          winningCardPosition,
+          trickWinner,
+          currentPlayer: state.currentPlayer,
+          cards: newTrickCards
+        });
+
+        toast.success(`${state.players[trickWinner].name} wins the trick!`, {
           duration: 1500,
         });
 
         newState = {
           ...newState,
           scores: newScores,
-          currentPlayer: actualWinnerPosition, // Winner leads next trick
+          currentPlayer: trickWinner, // Set the winner as the next player
           shouldClearTrick: true,
         };
       } else {
-        // If trick isn't complete, move to next active player
+        // Move to next active player if trick isn't complete
         let nextPlayer = (state.currentPlayer + 1) % 4;
         while (state.goingAlone && state.players[nextPlayer].sittingOut) {
           nextPlayer = (nextPlayer + 1) % 4;
@@ -225,7 +231,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         };
       }
 
-      // Keep the currentPlayer (trick winner) as the lead for next trick
+      // Just clear the trick cards and keep the current player (winner) as is
       return {
         ...state,
         trickCards: [],
