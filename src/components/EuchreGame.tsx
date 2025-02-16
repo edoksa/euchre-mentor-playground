@@ -22,7 +22,7 @@ const EuchreGame: React.FC = () => {
   }, [phase]);
 
   useEffect(() => {
-    if (players[currentPlayer].isCPU && phase !== "pre-game") {
+    if (players[currentPlayer]?.isCPU && phase !== "pre-game") {
       const timer = setTimeout(() => {
         dispatch({ type: "CPU_PLAY" });
       }, 1000);
@@ -34,7 +34,7 @@ const EuchreGame: React.FC = () => {
     if (!trump || phase !== "playing") return;
     
     const player = players[currentPlayer];
-    if (player.isCPU) return;
+    if (!player || player.isCPU) return;
     
     if (!isValidPlay(card, player.hand, trickCards, trump)) {
       toast.error("Invalid play - you must follow suit if possible!");
@@ -47,13 +47,6 @@ const EuchreGame: React.FC = () => {
     }
 
     dispatch({ type: "PLAY_CARD", card });
-  };
-
-  const toggleLearningMode = () => {
-    dispatch({ type: "TOGGLE_LEARNING_MODE" });
-    if (!learningMode) {
-      toast.success("Learning mode enabled! You'll receive tips and explanations as you play.");
-    }
   };
 
   const handlePass = () => {
@@ -94,7 +87,7 @@ const EuchreGame: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-table p-2 md:p-4">
-      {/* Game Controls - Split into left and right corners */}
+      {/* Game Controls */}
       <div className="fixed bottom-2 md:bottom-4 left-2 md:left-4">
         <Button
           variant="outline"
@@ -114,7 +107,7 @@ const EuchreGame: React.FC = () => {
         </div>
       </div>
 
-      {phase !== "pre-game" && (
+      {phase !== "pre-game" && players && (
         <>
           {/* CPU Players */}
           <div className="flex justify-between mb-4 md:mb-8">
@@ -129,9 +122,9 @@ const EuchreGame: React.FC = () => {
                   )}
                 </div>
                 <div className="flex gap-1 md:gap-2">
-                  {player.hand.map((card) => (
+                  {player.hand.map((card, cardIndex) => (
                     <div
-                      key={card.id}
+                      key={`${player.id}-card-${cardIndex}`}
                       className="w-8 h-12 md:w-16 md:h-24 bg-card-back rounded-lg shadow-md"
                     />
                   ))}
@@ -145,7 +138,7 @@ const EuchreGame: React.FC = () => {
             <div className="grid grid-cols-2 gap-2 md:gap-4">
               {trickCards.map((card, i) => (
                 <Card
-                  key={card.id}
+                  key={`trick-card-${i}`}
                   card={card}
                   isPlayable={false}
                   className={isMobile ? "transform scale-75" : "transform scale-90"}
@@ -165,9 +158,9 @@ const EuchreGame: React.FC = () => {
               )}
             </div>
             <div className="flex gap-1 md:gap-2 justify-center">
-              {players[0].hand.map((card) => (
+              {players[0]?.hand.map((card, index) => (
                 <Card
-                  key={card.id}
+                  key={`player-card-${index}`}
                   card={card}
                   isPlayable={currentPlayer === 0 && phase === "playing"}
                   onClick={() => handleCardClick(card)}
