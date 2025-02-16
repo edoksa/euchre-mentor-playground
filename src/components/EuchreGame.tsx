@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { type Card as CardType } from "@/types/game";
@@ -247,12 +248,12 @@ const EuchreGame: React.FC = () => {
 
       {/* Player's hand area */}
       <div className="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2">
-        {currentPlayer === 0 && phase === "playing" && (
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white/90 px-4 py-2 rounded-full shadow-lg text-lg font-bold animate-bounce z-20">
-            It's Your Turn!
-          </div>
-        )}
-        <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
+        <div className="flex items-center gap-2 justify-center mb-2">
+          {currentPlayer === 0 && phase === "playing" && (
+            <div className="bg-white/90 px-4 py-1 rounded-md shadow-lg text-base font-bold animate-bounce">
+              It's Your Turn!
+            </div>
+          )}
           <p className="text-white text-xs md:text-base">Your Hand</p>
           {dealer === 0 && (
             <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">
