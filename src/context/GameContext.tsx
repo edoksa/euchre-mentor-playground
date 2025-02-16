@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -25,11 +24,12 @@ const initialState: GameState = {
   currentPlayer: 0,
   dealer: 0,
   trickCards: [],
-  scores: [0, 0] as [number, number],
+  scores: [0, 0],
   phase: "pre-game",
   learningMode: false,
   passCount: 0,
   trumpSelector: 0,
+  shouldClearTrick: false,
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -106,7 +106,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           ...newState,
           scores: newScores,
           currentPlayer: winner,
-          shouldClearTrick: true, // Add a flag to indicate that trick should be cleared
+          shouldClearTrick: true,
         };
 
         toast(`Team ${team + 1} wins the trick!`, {
@@ -150,7 +150,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       );
       const cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)];
 
-      // Add delay before CPU plays their card
       return new Promise<GameState>(resolve => {
         setTimeout(() => {
           resolve(gameReducer(state, { type: "PLAY_CARD", card: cardToPlay }));
@@ -170,7 +169,6 @@ const GameContext = createContext<{
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
-  // Handle trick clearing with a delay
   React.useEffect(() => {
     if (state.shouldClearTrick) {
       const timer = setTimeout(() => {
