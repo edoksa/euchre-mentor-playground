@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast"
 import {
   Toast,
@@ -27,7 +28,7 @@ export function Toaster() {
           </Toast>
         )
       })}
-      <ToastViewport />
+      <ToastViewport className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col p-4 gap-2 w-[396px] max-w-[100vw] m-0 list-none z-[100] outline-none" />
     </ToastProvider>
   )
 }
