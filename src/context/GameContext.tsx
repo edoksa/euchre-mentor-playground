@@ -44,8 +44,15 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...initialState,
         phase: "dealing",
         dealer: Math.floor(Math.random() * 4),
+        learningMode: state.learningMode,
       };
-      
+
+    case "TOGGLE_LEARNING_MODE":
+      return {
+        ...state,
+        learningMode: !state.learningMode,
+      };
+
     case "DEAL": {
       const deck = createDeck();
       const dealResult = dealCards(deck);
@@ -111,7 +118,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const currentPlayer = state.players[state.currentPlayer];
       if (!currentPlayer || !currentPlayer.hand) return state;
 
-      // Prevent playing if we already have 4 cards
       if (state.trickCards.length >= 4) return state;
 
       const newHand = currentPlayer.hand.filter((c) => c.id !== action.card.id);
@@ -163,7 +169,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
       if (!state.trump) return state;
       
-      // Don't allow CPU to play if we need to clear the trick first
       if (state.shouldClearTrick) return state;
       
       const playableCards = cpu.hand.filter((c) =>
@@ -175,11 +180,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)];
       return gameReducer(state, { type: "PLAY_CARD", card: cardToPlay });
     }
-    case "TOGGLE_LEARNING_MODE":
-      return {
-        ...state,
-        learningMode: !state.learningMode,
-      };
     case "CLEAR_TRICK": {
       return {
         ...state,
