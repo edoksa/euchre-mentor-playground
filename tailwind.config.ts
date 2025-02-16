@@ -31,7 +31,7 @@ export default {
         },
         card: {
           DEFAULT: "#ffffff",
-          back: "#1c3879", // Deep blue for card backs
+          back: "#2b4d3d",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
