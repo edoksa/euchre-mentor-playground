@@ -174,9 +174,8 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         newState = {
           ...newState,
           scores: newScores,
-          currentPlayer: trickWinner,  // Set winner as next lead player
-          shouldClearTrick: true,
-          leadPlayer: trickWinner,     // Track who should lead next
+          currentPlayer: trickWinner,  // Winner becomes the next lead player
+          shouldClearTrick: true
         };
       } else {
         // Move to next active player if trick isn't complete
@@ -237,7 +236,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       return {
         ...state,
         trickCards: [],
-        shouldClearTrick: false,
+        shouldClearTrick: false
       };
     }
 
