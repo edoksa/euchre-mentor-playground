@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -101,22 +102,16 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const newScores: [number, number] = [...state.scores] as [number, number];
         newScores[team]++;
 
-        // Instead of clearing trick cards immediately, just update scores and winner
         newState = {
           ...newState,
           scores: newScores,
           currentPlayer: winner,
+          shouldClearTrick: true, // Add a flag to indicate that trick should be cleared
         };
 
-        // Show who won the trick
         toast(`Team ${team + 1} wins the trick!`, {
           duration: 2000,
         });
-
-        // Schedule clearing of trick cards after delay
-        setTimeout(() => {
-          dispatch({ type: "CLEAR_TRICK" });
-        }, 2000);
       }
 
       return newState;
@@ -130,6 +125,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return {
         ...state,
         trickCards: [],
+        shouldClearTrick: false,
       };
     }
     case "CPU_PLAY": {
@@ -173,6 +169,16 @@ const GameContext = createContext<{
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+
+  // Handle trick clearing with a delay
+  React.useEffect(() => {
+    if (state.shouldClearTrick) {
+      const timer = setTimeout(() => {
+        dispatch({ type: "CLEAR_TRICK" });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [state.shouldClearTrick]);
 
   return (
     <GameContext.Provider value={{ state, dispatch }}>
