@@ -86,6 +86,16 @@ const isWinningCard = (card1: Card, card2: Card, trump: Suit): boolean => {
   return RANKS.indexOf(card1.rank) > RANKS.indexOf(card2.rank);
 };
 
+const canBeatCard = (cardToPlay: Card, cardToBeat: Card, trump: Suit): boolean => {
+  return isWinningCard(cardToPlay, cardToBeat, trump);
+};
+
+const findHighestPlayedCard = (trick: Card[], trump: Suit): Card => {
+  return trick.reduce((highest, current) => 
+    isWinningCard(current, highest, trump) ? current : highest
+  , trick[0]);
+};
+
 export const getTip = (
   hand: Card[],
   trick: Card[],
@@ -110,19 +120,32 @@ export const getTip = (
 
   const leadSuit = trick[0].suit;
   const followingSuit = hand.filter((c) => c.suit === leadSuit);
+  const highestPlayed = findHighestPlayedCard(trick, trump);
   
   if (followingSuit.length > 0) {
-    const highFollow = followingSuit.filter((c) => ["A", "K", "J"].includes(c.rank));
-    if (highFollow.length > 0) return "You have high cards in the led suit - consider winning the trick!";
-    return "You must follow suit - play your lowest card if you can't win.";
+    // Must follow suit
+    const canWinTrick = followingSuit.some(card => canBeatCard(card, highestPlayed, trump));
+    if (canWinTrick) {
+      return "You can win this trick - play your highest card in the led suit!";
+    } else {
+      return "You can't win this trick - play your lowest card in the led suit to save stronger cards for later.";
+    }
   }
 
   const trumpCards = hand.filter((c) => c.suit === trump);
   if (trumpCards.length > 0) {
-    return "You can't follow suit - consider trumping to win the trick!";
+    // Can't follow suit but have trump
+    const highestTrumpPlayed = trick.find(c => c.suit === trump);
+    if (!highestTrumpPlayed) {
+      return "Consider trumping to win the trick!";
+    } else if (trumpCards.some(card => canBeatCard(card, highestTrumpPlayed, trump))) {
+      return "You can over-trump to win the trick!";
+    } else {
+      return "Save your trump cards - you can't win this trick.";
+    }
   }
 
-  return "You can't follow suit or trump - discard a low card.";
+  return "You can't follow suit or trump - discard your lowest card.";
 };
 
 export const getGameRules = (): string => {
