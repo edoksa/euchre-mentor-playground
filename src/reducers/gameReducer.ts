@@ -1,4 +1,3 @@
-
 import { GameState, Card, Suit } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
 import { toast } from "sonner";
@@ -147,22 +146,22 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       };
 
       if (newTrickCards.length === (state.goingAlone ? 3 : 4)) {
-        // Find the player who led the trick
-        const firstPlayerOfTrick = (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
+        // Find who led the trick (first player)
+        const leadPlayer = (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
         
-        // Find which card position won (0-3)
-        const winningCardPosition = determineWinner(newTrickCards, state.trump);
+        // Get the winning position relative to the lead
+        const winningPosition = determineWinner(newTrickCards, state.trump);
         
-        // Calculate the actual winner by adding the winning position to the first player
-        const trickWinner = (firstPlayerOfTrick + winningCardPosition) % 4;
+        // Calculate actual winner
+        const trickWinner = (leadPlayer + winningPosition) % 4;
         
-        // Create new scores array with explicit type and values
+        // Update scores
         const newScores: [number, number] = [state.scores[0], state.scores[1]];
         newScores[trickWinner % 2]++;
 
         console.log('Trick details:', {
-          firstPlayerOfTrick,
-          winningCardPosition,
+          leadPlayer,
+          winningPosition,
           trickWinner,
           currentPlayer: state.currentPlayer,
           cards: newTrickCards
@@ -175,8 +174,9 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         newState = {
           ...newState,
           scores: newScores,
-          currentPlayer: trickWinner, // Set the winner as the next player
+          currentPlayer: trickWinner,  // Set winner as next lead player
           shouldClearTrick: true,
+          leadPlayer: trickWinner,     // Track who should lead next
         };
       } else {
         // Move to next active player if trick isn't complete
@@ -233,7 +233,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         };
       }
 
-      // Just clear the trick cards and keep the current player (winner) as is
+      // Clear the trick cards but maintain the currentPlayer (trick winner)
       return {
         ...state,
         trickCards: [],
