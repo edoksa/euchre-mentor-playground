@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { type Card as CardType } from "@/types/game";
@@ -6,7 +5,7 @@ import Card from "@/components/Card";
 import { isValidPlay, getTip, getGameRules, getBestPlay } from "@/utils/gameUtils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Info, Play, HelpCircle, Book } from "lucide-react";
+import { Info, Play, HelpCircle, Book, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -80,6 +79,11 @@ const EuchreGame: React.FC = () => {
     toast.info(`Suggestion: Play the ${bestPlay.rank} of ${bestPlay.suit}`);
   };
 
+  const handleNewGame = () => {
+    localStorage.removeItem("euchre_game_state");
+    window.location.reload();
+  };
+
   if (phase === "pre-game") {
     return (
       <div className="min-h-screen bg-table flex items-center justify-center p-4">
@@ -119,7 +123,7 @@ const EuchreGame: React.FC = () => {
         </div>
 
         <Dialog open={showRules} onOpenChange={setShowRules}>
-          <DialogContent>
+          <DialogContent className="max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Euchre Rules</DialogTitle>
             </DialogHeader>
@@ -136,7 +140,20 @@ const EuchreGame: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-table p-2 md:p-4 relative">
-      {/* Game controls - bottom left */}
+      {/* Game controls - top left */}
+      <div className="fixed top-4 left-4">
+        <Button
+          variant="secondary"
+          onClick={handleNewGame}
+          className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg"
+          size={isMobile ? "sm" : "default"}
+        >
+          <RotateCcw className="w-3 h-3 md:w-4 md:h-4" />
+          New Game
+        </Button>
+      </div>
+
+      {/* Learning controls - bottom left */}
       <div className="fixed bottom-4 left-4 flex flex-col gap-2">
         <Button
           variant="secondary"
