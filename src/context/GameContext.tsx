@@ -159,14 +159,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const newScores: [number, number] = [...state.scores];
         newScores[team]++;
 
+        const startingPosition = state.trickCards.length === 0 ? state.dealer + 1 : state.currentPlayer;
+        const winnerActualPosition = (startingPosition + winner) % 4;
+
         newState = {
           ...newState,
           scores: newScores,
-          currentPlayer: winner,
+          currentPlayer: winnerActualPosition,
           shouldClearTrick: true,
         };
 
-        toast.success(`Team ${team + 1} wins the trick!`, {
+        toast.success(`${state.players[winnerActualPosition].name} wins the trick!`, {
           duration: 1500,
         });
       }
