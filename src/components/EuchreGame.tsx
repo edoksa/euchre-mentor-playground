@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { type Card as CardType } from "@/types/game";
-import Card from "./Card";
+import Card from "@/components/Card";
 import { isValidPlay, getTip, getGameRules, getBestPlay } from "@/utils/gameUtils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
