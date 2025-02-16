@@ -1,13 +1,14 @@
-
 import React, { createContext, useContext, useReducer } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
 import { toast } from "sonner";
 
 type GameAction =
+  | { type: "START_GAME" }
   | { type: "DEAL" }
   | { type: "PLAY_CARD"; card: Card }
   | { type: "SET_TRUMP"; suit: Suit }
+  | { type: "PASS" }
   | { type: "TOGGLE_LEARNING_MODE" }
   | { type: "CPU_PLAY" };
 
@@ -20,14 +21,22 @@ const initialState: GameState = {
     { id: "p4", name: "CPU 3", hand: [], isCPU: true },
   ],
   currentPlayer: 0,
+  dealer: 0,
   trickCards: [],
-  scores: [0, 0],
-  phase: "dealing",
+  scores: [0, 0] as [number, number],
+  phase: "pre-game",
   learningMode: false,
+  passCount: 0,
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
+    case "START_GAME":
+      return {
+        ...state,
+        phase: "dealing",
+        dealer: Math.floor(Math.random() * 4), // Randomly select initial dealer
+      };
     case "DEAL": {
       const deck = createDeck();
       const { hands, remainingDeck } = dealCards(deck);
@@ -82,6 +91,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return {
         ...state,
         learningMode: !state.learningMode,
+      };
+    case "PASS":
+      return {
+        ...state,
+        passCount: (state.passCount + 1) % 4,
       };
     case "CPU_PLAY": {
       if (!state.trump) return state;

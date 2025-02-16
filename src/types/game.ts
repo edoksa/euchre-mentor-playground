@@ -14,13 +14,17 @@ export type Player = {
   isCPU: boolean;
 };
 
+export type GamePhase = "pre-game" | "dealing" | "bidding" | "playing";
+
 export type GameState = {
   deck: Card[];
   players: Player[];
   currentPlayer: number;
+  dealer: number;
   trump?: Suit;
   trickCards: Card[];
-  scores: [number, number]; // Team scores [we, they]
-  phase: "dealing" | "bidding" | "playing";
+  scores: [number, number];
+  phase: GamePhase;
   learningMode: boolean;
+  passCount: number;
 };

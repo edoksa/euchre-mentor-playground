@@ -65,20 +65,28 @@ const EuchreGame: React.FC = () => {
       <div className="min-h-screen bg-table flex items-center justify-center p-4">
         <div className="bg-white/90 p-6 md:p-8 rounded-lg shadow-lg max-w-md w-full space-y-6">
           <h1 className="text-xl md:text-2xl font-bold text-center mb-6">Welcome to Euchre!</h1>
-          <div className="flex items-center justify-between mb-4">
-            <label className="font-medium text-sm md:text-base">Enable Learning Mode</label>
-            <Switch
-              checked={learningMode}
-              onCheckedChange={() => dispatch({ type: "TOGGLE_LEARNING_MODE" })}
-            />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <label className="font-medium text-sm md:text-base">Learning Mode</label>
+              <Switch
+                checked={learningMode}
+                onCheckedChange={() => dispatch({ type: "TOGGLE_LEARNING_MODE" })}
+              />
+            </div>
+            {learningMode && (
+              <p className="text-sm text-gray-600 italic">
+                Learning mode enabled! You'll receive tips and explanations as you play.
+              </p>
+            )}
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={() => dispatch({ type: "START_GAME" })}
+            >
+              <Play className="w-5 h-5 mr-2" />
+              Let's Play!
+            </Button>
           </div>
-          <Button
-            className="w-full"
-            onClick={() => dispatch({ type: "START_GAME" })}
-          >
-            <Play className="w-4 h-4 mr-2" />
-            Let's Play!
-          </Button>
         </div>
       </div>
     );
@@ -106,61 +114,69 @@ const EuchreGame: React.FC = () => {
         </div>
       </div>
 
-      {/* CPU Players */}
-      <div className="flex justify-between mb-4 md:mb-8">
-        {players.slice(1).map((player, i) => (
-          <div key={player.id} className="text-center">
-            <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
-              <p className="text-white text-xs md:text-base">{player.name}</p>
-              {i + 1 === dealer && (
-                <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">Dealer</span>
-              )}
-            </div>
-            <div className="flex gap-1 md:gap-2">
-              {player.hand.map((card) => (
-                <div
+      {phase !== "pre-game" && (
+        <>
+          {/* CPU Players */}
+          <div className="flex justify-between mb-4 md:mb-8">
+            {players.slice(1).map((player, i) => (
+              <div key={player.id} className="text-center">
+                <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
+                  <p className="text-white text-xs md:text-base">{player.name}</p>
+                  {i + 1 === dealer && (
+                    <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">
+                      Dealer
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-1 md:gap-2">
+                  {player.hand.map((card) => (
+                    <div
+                      key={card.id}
+                      className="w-8 h-12 md:w-16 md:h-24 bg-card-back rounded-lg shadow-md"
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Trick Area */}
+          <div className="flex justify-center items-center h-32 md:h-48 mb-4 md:mb-8">
+            <div className="grid grid-cols-2 gap-2 md:gap-4">
+              {trickCards.map((card, i) => (
+                <Card
                   key={card.id}
-                  className="w-8 h-12 md:w-16 md:h-24 bg-card-back rounded-lg shadow-md"
+                  card={card}
+                  isPlayable={false}
+                  className={isMobile ? "transform scale-75" : "transform scale-90"}
                 />
               ))}
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Trick Area */}
-      <div className="flex justify-center items-center h-32 md:h-48 mb-4 md:mb-8">
-        <div className="grid grid-cols-2 gap-2 md:gap-4">
-          {trickCards.map((card, i) => (
-            <Card
-              key={card.id}
-              card={card}
-              isPlayable={false}
-              className={isMobile ? "transform scale-75" : "transform scale-90"}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Player's Hand */}
-      <div className="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2">
-        <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
-          <p className="text-white text-xs md:text-base">Your Hand</p>
-          {dealer === 0 && (
-            <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">Dealer</span>
-          )}
-        </div>
-        <div className="flex gap-1 md:gap-2 justify-center">
-          {players[0].hand.map((card) => (
-            <Card
-              key={card.id}
-              card={card}
-              isPlayable={currentPlayer === 0 && phase === "playing"}
-              onClick={() => handleCardClick(card)}
-            />
-          ))}
-        </div>
-      </div>
+          {/* Player's Hand */}
+          <div className="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2">
+            <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
+              <p className="text-white text-xs md:text-base">Your Hand</p>
+              {dealer === 0 && (
+                <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">
+                  Dealer
+                </span>
+              )}
+            </div>
+            <div className="flex gap-1 md:gap-2 justify-center">
+              {players[0].hand.map((card) => (
+                <Card
+                  key={card.id}
+                  card={card}
+                  isPlayable={currentPlayer === 0 && phase === "playing"}
+                  onClick={() => handleCardClick(card)}
+                />
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Bidding UI */}
       {phase === "bidding" && currentPlayer === 0 && (
