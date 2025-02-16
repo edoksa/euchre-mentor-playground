@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -42,11 +43,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
     case "DEAL": {
       const deck = createDeck();
-      const { hands, remainingDeck } = dealCards(deck);
+      const { hands = [[], [], [], []], remainingDeck = [] } = dealCards(deck) || {};
+      
       return {
         ...state,
         deck: remainingDeck,
-        players: state.players.map((p, i) => ({ ...p, hand: hands[i] })),
+        players: state.players.map((p, i) => ({ ...p, hand: hands[i] || [] })),
         currentPlayer: (state.dealer + 1) % 4,
         phase: "bidding",
         passCount: 0,
@@ -84,6 +86,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (!state.trump) return state;
 
       const currentPlayer = state.players[state.currentPlayer];
+      if (!currentPlayer || !currentPlayer.hand) return state;
+
       const newHand = currentPlayer.hand.filter((c) => c.id !== action.card.id);
       const newTrickCards = [...state.trickCards, action.card];
       
@@ -130,7 +134,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
     case "CPU_PLAY": {
       const cpu = state.players[state.currentPlayer];
-      if (!cpu.isCPU) return state;
+      if (!cpu || !cpu.isCPU || !cpu.hand) return state;
 
       if (state.phase === "bidding") {
         const shouldPass = Math.random() > 0.3;
