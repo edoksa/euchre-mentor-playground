@@ -163,6 +163,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
       if (!state.trump) return state;
       
+      // Don't allow CPU to play if we need to clear the trick first
+      if (state.shouldClearTrick) return state;
+      
       const playableCards = cpu.hand.filter((c) =>
         isValidPlay(c, cpu.hand, state.trickCards, state.trump)
       );
