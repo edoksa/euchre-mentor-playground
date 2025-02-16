@@ -30,12 +30,46 @@ const Card: React.FC<CardProps> = ({
     clubs: "♣",
   }[suit];
 
+  if (!card.faceUp) {
+    return (
+      <div
+        className={cn(
+          "relative rounded-lg shadow-md transition-all duration-300",
+          "bg-card-back",
+          isPlayable && "hover:shadow-lg cursor-pointer hover:-translate-y-2",
+          isSelected && "-translate-y-4",
+          !isPlayable && "opacity-90 cursor-not-allowed",
+          isMobile ? "w-16 h-24" : "w-24 h-36",
+          className
+        )}
+      >
+        {/* Card Back Pattern */}
+        <div className="absolute inset-[3px] rounded-md border-2 border-white/20">
+          <div className="absolute inset-2 rounded border border-white/10 bg-gradient-to-br from-blue-900/50 to-blue-800/50">
+            {/* Diamond Pattern */}
+            <div className="absolute inset-0 grid grid-cols-4 grid-rows-6 gap-1 p-1">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white/5 rounded-sm"
+                  style={{
+                    transform: `rotate(${45}deg)`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       onClick={isPlayable ? onClick : undefined}
       className={cn(
         "relative bg-white rounded-lg shadow-md transition-all duration-300",
-        "hover:shadow-lg cursor-pointer select-none",
+        "hover:shadow-lg select-none",
         isPlayable && "hover:animate-card-hover",
         isSelected && "-translate-y-4",
         !isPlayable && "opacity-90",
