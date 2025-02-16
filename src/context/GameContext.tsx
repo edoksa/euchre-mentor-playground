@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useReducer } from "react";
+import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
 import { toast } from "sonner";
@@ -165,15 +164,26 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
   }
 };
 
+const STORAGE_KEY = "euchre_game_state";
+
 const GameContext = createContext<{
   state: GameState;
   dispatch: React.Dispatch<GameAction>;
 } | null>(null);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(gameReducer, initialState);
+  const loadInitialState = () => {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    return savedState ? JSON.parse(savedState) : initialState;
+  };
 
-  React.useEffect(() => {
+  const [state, dispatch] = useReducer(gameReducer, loadInitialState());
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [state]);
+
+  useEffect(() => {
     if (state.shouldClearTrick) {
       const timer = setTimeout(() => {
         dispatch({ type: "CLEAR_TRICK" });

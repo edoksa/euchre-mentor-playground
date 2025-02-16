@@ -5,7 +5,9 @@ import EuchreGame from "@/components/EuchreGame";
 const Index = () => {
   return (
     <GameProvider>
-      <EuchreGame />
+      <div className="min-h-screen">
+        <EuchreGame />
+      </div>
     </GameProvider>
   );
 };
