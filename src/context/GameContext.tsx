@@ -111,6 +111,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const currentPlayer = state.players[state.currentPlayer];
       if (!currentPlayer || !currentPlayer.hand) return state;
 
+      // Prevent playing if we already have 4 cards
+      if (state.trickCards.length >= 4) return state;
+
       const newHand = currentPlayer.hand.filter((c) => c.id !== action.card.id);
       const newTrickCards = [...state.trickCards, action.card];
       
