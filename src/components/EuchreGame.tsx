@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { type Card as CardType } from "@/types/game";
-import Card from "@/components/Card";
+import Card from "./Card"; // Fix import path
 import { isValidPlay, getTip, getGameRules, getBestPlay } from "@/utils/gameUtils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -166,12 +166,12 @@ const EuchreGame: React.FC = () => {
           <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm text-center">
             <p className="font-bold">Trump</p>
             <p className="text-lg">{trump === "hearts" ? "♥" : trump === "diamonds" ? "♦" : trump === "spades" ? "♠" : "♣"}</p>
-            <p className="text-xs text-gray-600 mt-1">Called by: {players[trumpSelector].name}</p>
+            <p className="text-xs text-gray-600 mt-1">Selected by {players[trumpSelector]?.name || "Unknown"}</p>
           </div>
         )}
         <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm">
           <p className="font-bold">Score</p>
-          <p>Us: {scores[0]} | Them: {scores[1]}</p>
+          <p>Us: {scores?.[0] || 0} | Them: {scores?.[1] || 0}</p>
         </div>
       </div>
 
@@ -205,7 +205,7 @@ const EuchreGame: React.FC = () => {
           {trickCards.map((card, i) => (
             <div key={`trick-card-${i}`} className="text-center">
               <p className="text-white text-xs md:text-sm mb-1">
-                {players[(currentPlayer - trickCards.length + i + 4) % 4].name}
+                {players[(currentPlayer - trickCards.length + i + 4) % 4]?.name || "Unknown"}
               </p>
               <Card
                 card={card}
