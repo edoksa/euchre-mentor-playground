@@ -146,31 +146,35 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         shouldClearTrick: false,
       };
 
-      let nextPlayer = (state.currentPlayer + 1) % 4;
-      while (state.goingAlone && state.players[nextPlayer].sittingOut) {
-        nextPlayer = (nextPlayer + 1) % 4;
-      }
-      newState.currentPlayer = nextPlayer;
-
       if (newTrickCards.length === (state.goingAlone ? 3 : 4)) {
+        // Calculate winner when trick is complete
         const winner = determineWinner(newTrickCards, state.trump);
         const team = winner % 2;
         const newScores: [number, number] = [...state.scores];
         newScores[team]++;
 
-        const startingPosition = state.trickCards.length === 0 ? state.dealer + 1 : state.currentPlayer;
-        const winnerActualPosition = (startingPosition + winner) % 4;
+        // Calculate who actually won based on the starting position
+        const leadPlayer = state.trickCards.length === 0 ? state.currentPlayer : 
+          (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
+        const winnerActualPosition = (leadPlayer + winner) % 4;
 
         newState = {
           ...newState,
           scores: newScores,
-          currentPlayer: winnerActualPosition,
+          currentPlayer: winnerActualPosition, // Set winner as next lead player
           shouldClearTrick: true,
         };
 
         toast.success(`${state.players[winnerActualPosition].name} wins the trick!`, {
           duration: 1500,
         });
+      } else {
+        // If trick isn't complete, move to next active player
+        let nextPlayer = (state.currentPlayer + 1) % 4;
+        while (state.goingAlone && state.players[nextPlayer].sittingOut) {
+          nextPlayer = (nextPlayer + 1) % 4;
+        }
+        newState.currentPlayer = nextPlayer;
       }
 
       return newState;
