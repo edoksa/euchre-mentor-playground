@@ -1,4 +1,3 @@
-
 import { Card, Rank, Suit, Player } from "@/types/game";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "spades", "clubs"];
@@ -27,31 +26,36 @@ export const shuffleDeck = (deck: Card[]): Card[] => {
   return newDeck;
 };
 
-export const dealCards = (deck: Card[]) => {
-  if (!deck || deck.length < 20) {
-    console.error("Invalid deck provided for dealing");
-    return null;
-  }
+export const dealCards = (deck: Card[]): { hands: Card[][]; remainingDeck: Card[] } | null => {
+  try {
+    if (!deck || deck.length < 24) {
+      console.error("Invalid deck provided for dealing");
+      return null;
+    }
 
-  const hands: Card[][] = [[], [], [], []];
-  const shuffledDeck = [...deck];
-  
-  // Deal 5 cards to each player
-  for (let i = 0; i < 5; i++) {
-    for (let j = 0; j < 4; j++) {
-      if (shuffledDeck.length > 0) {
+    const hands: Card[][] = [[], [], [], []];
+    const shuffledDeck = shuffleDeck([...deck]);
+    
+    // Deal exactly 5 cards to each player
+    for (let playerIndex = 0; playerIndex < 4; playerIndex++) {
+      for (let cardIndex = 0; cardIndex < 5; cardIndex++) {
         const card = shuffledDeck.pop();
-        if (card) {
-          hands[j].push(card);
+        if (!card) {
+          console.error("Not enough cards in deck");
+          return null;
         }
+        hands[playerIndex].push(card);
       }
     }
-  }
 
-  return {
-    hands,
-    remainingDeck: shuffledDeck
-  };
+    return {
+      hands,
+      remainingDeck: shuffledDeck
+    };
+  } catch (error) {
+    console.error("Error in dealCards:", error);
+    return null;
+  }
 };
 
 export const isValidPlay = (card: Card, hand: Card[], trick: Card[], trump: Suit): boolean => {

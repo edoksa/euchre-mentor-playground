@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -41,33 +40,37 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         phase: "dealing",
         dealer: Math.floor(Math.random() * 4),
       };
+      
     case "DEAL": {
-      try {
-        const deck = createDeck();
-        const dealResult = dealCards(deck);
-        
-        if (!dealResult || !dealResult.hands) {
-          console.error("Failed to deal cards");
-          return state;
-        }
-
-        const { hands, remainingDeck = [] } = dealResult;
-        
-        // Ensure we have exactly 4 hands
-        const validHands = Array.from({ length: 4 }, (_, i) => hands[i] || []);
-        
+      const deck = createDeck();
+      const dealResult = dealCards(deck);
+      
+      if (!dealResult) {
+        toast.error("Failed to deal cards");
         return {
-          ...state,
-          deck: remainingDeck,
-          players: state.players.map((p, i) => ({ ...p, hand: validHands[i] })),
-          currentPlayer: (state.dealer + 1) % 4,
-          phase: "bidding",
-          passCount: 0,
+          ...initialState,
+          phase: "pre-game"
         };
-      } catch (error) {
-        console.error("Error dealing cards:", error);
-        return state;
       }
+
+      const { hands, remainingDeck } = dealResult;
+      
+      if (!hands || hands.length !== 4 || hands.some(hand => hand.length !== 5)) {
+        toast.error("Invalid deal detected");
+        return {
+          ...initialState,
+          phase: "pre-game"
+        };
+      }
+
+      return {
+        ...state,
+        deck: remainingDeck,
+        players: state.players.map((p, i) => ({ ...p, hand: hands[i] })),
+        currentPlayer: (state.dealer + 1) % 4,
+        phase: "bidding",
+        passCount: 0,
+      };
     }
     case "PASS": {
       const newPassCount = state.passCount + 1;
