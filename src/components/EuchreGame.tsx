@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { type Card as CardType } from "@/types/game";
@@ -5,7 +6,7 @@ import Card from "@/components/Card";
 import { isValidPlay, getTip, getGameRules, getBestPlay } from "@/utils/gameUtils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Info, Play, HelpCircle } from "lucide-react";
+import { Info, Play, HelpCircle, Book } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -146,16 +147,29 @@ const EuchreGame: React.FC = () => {
           <Info className="w-3 h-3 md:w-4 md:h-4" />
           {learningMode ? "Disable" : "Enable"} Learning
         </Button>
-        {learningMode && phase === "playing" && currentPlayer === 0 && (
-          <Button
-            variant="secondary"
-            onClick={handleHelpRequest}
-            className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg"
-            size={isMobile ? "sm" : "default"}
-          >
-            <HelpCircle className="w-3 h-3 md:w-4 md:h-4" />
-            Help Me
-          </Button>
+        {learningMode && (
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setShowRules(true)}
+              className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg"
+              size={isMobile ? "sm" : "default"}
+            >
+              <Book className="w-3 h-3 md:w-4 md:h-4" />
+              Game Rules
+            </Button>
+            {phase === "playing" && (
+              <Button
+                variant="secondary"
+                onClick={handleHelpRequest}
+                className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg"
+                size={isMobile ? "sm" : "default"}
+              >
+                <HelpCircle className="w-3 h-3 md:w-4 md:h-4" />
+                Help Me
+              </Button>
+            )}
+          </>
         )}
       </div>
       
@@ -279,7 +293,7 @@ const EuchreGame: React.FC = () => {
 
       {/* Rules Dialog */}
       <Dialog open={showRules} onOpenChange={setShowRules}>
-        <DialogContent>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Euchre Rules</DialogTitle>
           </DialogHeader>
