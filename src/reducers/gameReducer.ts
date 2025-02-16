@@ -146,25 +146,27 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       };
 
       if (newTrickCards.length === (state.goingAlone ? 3 : 4)) {
-        // Find who led the trick (first player)
-        const leadPlayer = (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
+        // Find who led the trick
+        const leadPosition = state.currentPlayer - (newTrickCards.length - 1);
+        const leadPlayer = ((leadPosition % 4) + 4) % 4; // Ensure positive number
         
-        // Get the winning position relative to the lead
+        // Get the winning position (0-3) relative to the lead
         const winningPosition = determineWinner(newTrickCards, state.trump);
         
         // Calculate actual winner
-        const trickWinner = (leadPlayer + winningPosition) % 4;
+        const trickWinner = ((leadPlayer + winningPosition) % 4);
         
         // Update scores
         const newScores: [number, number] = [state.scores[0], state.scores[1]];
         newScores[trickWinner % 2]++;
 
         console.log('Trick details:', {
+          leadPosition,
           leadPlayer,
           winningPosition,
           trickWinner,
           currentPlayer: state.currentPlayer,
-          cards: newTrickCards
+          cards: newTrickCards.map(c => `${c.rank}-${c.suit}`)
         });
 
         toast.success(`${state.players[trickWinner].name} wins the trick!`, {
@@ -174,7 +176,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         newState = {
           ...newState,
           scores: newScores,
-          currentPlayer: trickWinner,  // Winner becomes the next lead player
+          currentPlayer: trickWinner,
           shouldClearTrick: true
         };
       } else {
@@ -232,7 +234,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         };
       }
 
-      // Clear the trick cards but maintain the currentPlayer (trick winner)
+      // Clear the trick cards but keep currentPlayer (trick winner) to lead next
       return {
         ...state,
         trickCards: [],
