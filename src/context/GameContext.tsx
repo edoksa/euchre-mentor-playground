@@ -10,7 +10,8 @@ type GameAction =
   | { type: "SET_TRUMP"; suit: Suit }
   | { type: "PASS" }
   | { type: "TOGGLE_LEARNING_MODE" }
-  | { type: "CPU_PLAY" };
+  | { type: "CPU_PLAY" }
+  | { type: "CLEAR_TRICK" };
 
 const initialState: GameState = {
   deck: [],
@@ -99,15 +100,23 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const team = winner % 2;
         const newScores: [number, number] = [...state.scores] as [number, number];
         newScores[team]++;
-        
+
+        // Instead of clearing trick cards immediately, just update scores and winner
         newState = {
           ...newState,
-          trickCards: [],
-          currentPlayer: winner,
           scores: newScores,
+          currentPlayer: winner,
         };
 
-        toast(`Team ${team + 1} wins the trick!`);
+        // Show who won the trick
+        toast(`Team ${team + 1} wins the trick!`, {
+          duration: 2000,
+        });
+
+        // Schedule clearing of trick cards after delay
+        setTimeout(() => {
+          dispatch({ type: "CLEAR_TRICK" });
+        }, 2000);
       }
 
       return newState;
@@ -117,6 +126,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         learningMode: !state.learningMode,
       };
+    case "CLEAR_TRICK": {
+      return {
+        ...state,
+        trickCards: [],
+      };
+    }
     case "CPU_PLAY": {
       const cpu = state.players[state.currentPlayer];
       if (!cpu.isCPU) return state;
@@ -139,7 +154,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       );
       const cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)];
 
-      return gameReducer(state, { type: "PLAY_CARD", card: cardToPlay });
+      // Add delay before CPU plays their card
+      return new Promise<GameState>(resolve => {
+        setTimeout(() => {
+          resolve(gameReducer(state, { type: "PLAY_CARD", card: cardToPlay }));
+        }, 1000);
+      }) as any;
     }
     default:
       return state;
