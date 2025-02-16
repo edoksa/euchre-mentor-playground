@@ -146,24 +146,28 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       };
 
       if (newTrickCards.length === (state.goingAlone ? 3 : 4)) {
-        // Calculate winner when trick is complete
-        const winner = determineWinner(newTrickCards, state.trump);
-        const team = winner % 2;
-        const newScores: [number, number] = [...state.scores];
-        newScores[team]++;
+        // Calculate who led the trick
+        const leadPosition = (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
+        
+        // Calculate winner based on the cards played
+        const winningPosition = determineWinner(newTrickCards, state.trump);
+        
+        // Calculate actual winner position relative to who led
+        const actualWinnerPosition = (leadPosition + winningPosition) % 4;
+        
+        // Update scores for the winning team
+        const winningTeam = actualWinnerPosition % 2;
+        const newScores = [...state.scores] as [number, number];
+        newScores[winningTeam]++;
 
-        // Calculate who actually won based on the starting position
-        const leadPlayer = (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
-        const winnerActualPosition = (leadPlayer + winner) % 4;
-
-        toast.success(`${state.players[winnerActualPosition].name} wins the trick!`, {
+        toast.success(`${state.players[actualWinnerPosition].name} wins the trick!`, {
           duration: 1500,
         });
 
         newState = {
           ...newState,
           scores: newScores,
-          currentPlayer: winnerActualPosition, // Winner will lead the next trick
+          currentPlayer: actualWinnerPosition, // Winner leads next trick
           shouldClearTrick: true,
         };
       } else {
@@ -221,6 +225,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         };
       }
 
+      // Keep the currentPlayer (trick winner) as the lead for next trick
       return {
         ...state,
         trickCards: [],
