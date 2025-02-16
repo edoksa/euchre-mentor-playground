@@ -18,7 +18,7 @@ import {
 
 const EuchreGame: React.FC = () => {
   const { state, dispatch } = useGame();
-  const { players, currentPlayer, dealer, trickCards, trump, phase, learningMode, scores } = state;
+  const { players, currentPlayer, dealer, trickCards, trump, phase, learningMode, scores, trumpSelector } = state;
   const isMobile = useIsMobile();
   const [showRules, setShowRules] = useState(false);
 
@@ -166,6 +166,7 @@ const EuchreGame: React.FC = () => {
           <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm text-center">
             <p className="font-bold">Trump</p>
             <p className="text-lg">{trump === "hearts" ? "♥" : trump === "diamonds" ? "♦" : trump === "spades" ? "♠" : "♣"}</p>
+            <p className="text-xs text-gray-600 mt-1">Called by: {players[trumpSelector].name}</p>
           </div>
         )}
         <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm">
