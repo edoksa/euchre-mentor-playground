@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { type Card as CardType } from "@/types/game";
-import Card from "@/components/Card"; // Fix import path back to absolute path
+import Card from "./Card";
 import { isValidPlay, getTip, getGameRules, getBestPlay } from "@/utils/gameUtils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
