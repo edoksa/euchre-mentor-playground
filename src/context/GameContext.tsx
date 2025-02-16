@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -28,6 +27,7 @@ const initialState: GameState = {
   phase: "pre-game",
   learningMode: false,
   passCount: 0,
+  trumpSelector: 0,
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -54,7 +54,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const newPassCount = state.passCount + 1;
       const nextPlayer = (state.currentPlayer + 1) % 4;
       
-      // If everyone has passed except dealer
       if (newPassCount === 3 && nextPlayer === state.dealer) {
         toast.info("Dealer must select trump!");
         return {
@@ -74,8 +73,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return {
         ...state,
         trump: action.suit,
+        trumpSelector: state.currentPlayer,
         phase: "playing",
-        currentPlayer: (state.dealer + 1) % 4, // First player after dealer starts
+        currentPlayer: (state.dealer + 1) % 4,
       };
     }
     case "PLAY_CARD": {
@@ -122,8 +122,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (!cpu.isCPU) return state;
 
       if (state.phase === "bidding") {
-        // Simple CPU bidding logic
-        const shouldPass = Math.random() > 0.3; // 30% chance to pick trump
+        const shouldPass = Math.random() > 0.3;
         if (shouldPass && state.currentPlayer !== state.dealer) {
           return gameReducer(state, { type: "PASS" });
         } else {

@@ -22,6 +22,7 @@ export type GameState = {
   currentPlayer: number;
   dealer: number;
   trump?: Suit;
+  trumpSelector: number;
   trickCards: Card[];
   scores: [number, number];
   phase: GamePhase;
