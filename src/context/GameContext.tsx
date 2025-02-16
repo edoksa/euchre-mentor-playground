@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -35,7 +36,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return {
         ...state,
         phase: "dealing",
-        dealer: Math.floor(Math.random() * 4), // Randomly select initial dealer
+        dealer: Math.floor(Math.random() * 4),
       };
     case "DEAL": {
       const deck = createDeck();
@@ -44,7 +45,37 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         deck: remainingDeck,
         players: state.players.map((p, i) => ({ ...p, hand: hands[i] })),
+        currentPlayer: (state.dealer + 1) % 4,
         phase: "bidding",
+        passCount: 0,
+      };
+    }
+    case "PASS": {
+      const newPassCount = state.passCount + 1;
+      const nextPlayer = (state.currentPlayer + 1) % 4;
+      
+      // If everyone has passed except dealer
+      if (newPassCount === 3 && nextPlayer === state.dealer) {
+        toast.info("Dealer must select trump!");
+        return {
+          ...state,
+          currentPlayer: nextPlayer,
+          passCount: newPassCount,
+        };
+      }
+
+      return {
+        ...state,
+        currentPlayer: nextPlayer,
+        passCount: newPassCount,
+      };
+    }
+    case "SET_TRUMP": {
+      return {
+        ...state,
+        trump: action.suit,
+        phase: "playing",
+        currentPlayer: (state.dealer + 1) % 4, // First player after dealer starts
       };
     }
     case "PLAY_CARD": {
@@ -66,7 +97,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (newTrickCards.length === 4) {
         const winner = determineWinner(newTrickCards, state.trump);
         const team = winner % 2;
-        const newScores = [...state.scores];
+        const newScores: [number, number] = [...state.scores] as [number, number];
         newScores[team]++;
         
         newState = {
@@ -81,28 +112,29 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
       return newState;
     }
-    case "SET_TRUMP":
-      return {
-        ...state,
-        trump: action.suit,
-        phase: "playing",
-      };
     case "TOGGLE_LEARNING_MODE":
       return {
         ...state,
         learningMode: !state.learningMode,
       };
-    case "PASS":
-      return {
-        ...state,
-        passCount: (state.passCount + 1) % 4,
-      };
     case "CPU_PLAY": {
-      if (!state.trump) return state;
-      
       const cpu = state.players[state.currentPlayer];
       if (!cpu.isCPU) return state;
 
+      if (state.phase === "bidding") {
+        // Simple CPU bidding logic
+        const shouldPass = Math.random() > 0.3; // 30% chance to pick trump
+        if (shouldPass && state.currentPlayer !== state.dealer) {
+          return gameReducer(state, { type: "PASS" });
+        } else {
+          const suits: Suit[] = ["hearts", "diamonds", "spades", "clubs"];
+          const randomSuit = suits[Math.floor(Math.random() * suits.length)];
+          return gameReducer(state, { type: "SET_TRUMP", suit: randomSuit });
+        }
+      }
+
+      if (!state.trump) return state;
+      
       const playableCards = cpu.hand.filter((c) =>
         isValidPlay(c, cpu.hand, state.trickCards, state.trump)
       );
