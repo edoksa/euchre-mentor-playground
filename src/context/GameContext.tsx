@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -184,13 +183,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
 
     case "CLEAR_TRICK": {
-      // Check if all cards have been played (5 tricks)
       const allHandsEmpty = state.players.every(p => p.hand.length === 0);
       if (allHandsEmpty) {
         toast.info("Hand complete! Dealing new cards...", {
           duration: 1500,
         });
-        // Start a new hand
         return {
           ...state,
           phase: "dealing",
@@ -260,7 +257,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [state.shouldClearTrick]);
 
-  // Add CPU play effect
   useEffect(() => {
     if (state.phase !== "pre-game" && state.players[state.currentPlayer]?.isCPU && !state.shouldClearTrick) {
       const timer = setTimeout(() => {
