@@ -18,7 +18,7 @@ import {
 
 const EuchreGame: React.FC = () => {
   const { state, dispatch } = useGame();
-  const { players, currentPlayer, dealer, trickCards, trump, phase, learningMode, scores, trumpSelector } = state;
+  const { players = [], currentPlayer = 0, dealer = 0, trickCards = [], trump, phase = "pre-game", learningMode = false, scores = [0, 0], trumpSelector = 0 } = state || {};
   const isMobile = useIsMobile();
   const [showRules, setShowRules] = useState(false);
 
@@ -171,13 +171,13 @@ const EuchreGame: React.FC = () => {
         )}
         <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm">
           <p className="font-bold">Score</p>
-          <p>Us: {scores?.[0] || 0} | Them: {scores?.[1] || 0}</p>
+          <p>Us: {scores[0]} | Them: {scores[1]}</p>
         </div>
       </div>
 
       {/* Player hands and game area */}
       <div className="flex justify-between mb-4 md:mb-8">
-        {players.slice(1).map((player, i) => (
+        {(players.slice(1) || []).map((player, i) => (
           <div key={player.id} className="text-center">
             <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
               <p className="text-white text-xs md:text-base">{player.name}</p>
@@ -235,7 +235,7 @@ const EuchreGame: React.FC = () => {
           )}
         </div>
         <div className="flex gap-1 md:gap-2 justify-center">
-          {players[0]?.hand.map((card, index) => (
+          {players[0]?.hand?.map((card, index) => (
             <Card
               key={`player-card-${index}`}
               card={card}
