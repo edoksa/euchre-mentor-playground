@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -102,7 +103,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (newTrickCards.length === 4) {
         const winner = determineWinner(newTrickCards, state.trump);
         const team = winner % 2;
-        const newScores: [number, number] = [...state.scores] as [number, number];
+        const newScores = [...state.scores];
         newScores[team]++;
 
         newState = {
@@ -118,18 +119,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       }
 
       return newState;
-    }
-    case "TOGGLE_LEARNING_MODE":
-      return {
-        ...state,
-        learningMode: !state.learningMode,
-      };
-    case "CLEAR_TRICK": {
-      return {
-        ...state,
-        trickCards: [],
-        shouldClearTrick: false,
-      };
     }
     case "CPU_PLAY": {
       const cpu = state.players[state.currentPlayer];
@@ -151,13 +140,23 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const playableCards = cpu.hand.filter((c) =>
         isValidPlay(c, cpu.hand, state.trickCards, state.trump)
       );
+      
+      if (playableCards.length === 0) return state;
+      
       const cardToPlay = playableCards[Math.floor(Math.random() * playableCards.length)];
-
-      return new Promise<GameState>(resolve => {
-        setTimeout(() => {
-          resolve(gameReducer(state, { type: "PLAY_CARD", card: cardToPlay }));
-        }, 1000);
-      }) as any;
+      return gameReducer(state, { type: "PLAY_CARD", card: cardToPlay });
+    }
+    case "TOGGLE_LEARNING_MODE":
+      return {
+        ...state,
+        learningMode: !state.learningMode,
+      };
+    case "CLEAR_TRICK": {
+      return {
+        ...state,
+        trickCards: [],
+        shouldClearTrick: false,
+      };
     }
     default:
       return state;
@@ -173,14 +172,25 @@ const GameContext = createContext<{
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const loadInitialState = () => {
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    return savedState ? JSON.parse(savedState) : initialState;
+    try {
+      const savedState = localStorage.getItem(STORAGE_KEY);
+      if (!savedState) return initialState;
+      const parsedState = JSON.parse(savedState);
+      return parsedState;
+    } catch (error) {
+      console.error("Error loading game state:", error);
+      return initialState;
+    }
   };
 
   const [state, dispatch] = useReducer(gameReducer, loadInitialState());
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error("Error saving game state:", error);
+    }
   }, [state]);
 
   useEffect(() => {
