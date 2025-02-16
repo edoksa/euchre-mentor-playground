@@ -140,8 +140,8 @@ const EuchreGame: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-table p-2 md:p-4 relative">
-      {/* Game controls - top left */}
-      <div className="fixed top-4 left-4">
+      {/* Learning controls - bottom left */}
+      <div className="fixed bottom-4 left-4 flex flex-col gap-2">
         <Button
           variant="secondary"
           onClick={handleNewGame}
@@ -151,10 +151,6 @@ const EuchreGame: React.FC = () => {
           <RotateCcw className="w-3 h-3 md:w-4 md:h-4" />
           New Game
         </Button>
-      </div>
-
-      {/* Learning controls - bottom left */}
-      <div className="fixed bottom-4 left-4 flex flex-col gap-2">
         <Button
           variant="secondary"
           onClick={() => dispatch({ type: "TOGGLE_LEARNING_MODE" })}
