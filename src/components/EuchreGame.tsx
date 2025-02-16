@@ -10,52 +10,57 @@ import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { CheckedState } from "@radix-ui/react-checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 const EuchreGame: React.FC = () => {
-  const { state, dispatch } = useGame();
-  const { players = [], currentPlayer = 0, dealer = 0, trickCards = [], trump, phase = "pre-game", learningMode = false, scores = [0, 0], trumpSelector = 0, shouldClearTrick = false } = state || {};
+  const {
+    state,
+    dispatch
+  } = useGame();
+  const {
+    players = [],
+    currentPlayer = 0,
+    dealer = 0,
+    trickCards = [],
+    trump,
+    phase = "pre-game",
+    learningMode = false,
+    scores = [0, 0],
+    trumpSelector = 0,
+    shouldClearTrick = false
+  } = state || {};
   const isMobile = useIsMobile();
   const [showRules, setShowRules] = useState(false);
   const [goingAlone, setGoingAlone] = useState(false);
-
   useEffect(() => {
     if (phase === "dealing") {
-      dispatch({ type: "DEAL" });
+      dispatch({
+        type: "DEAL"
+      });
     }
   }, [phase]);
-
   useEffect(() => {
     if (players[currentPlayer]?.isCPU && phase !== "pre-game") {
       const timer = setTimeout(() => {
-        dispatch({ type: "CPU_PLAY" });
+        dispatch({
+          type: "CPU_PLAY"
+        });
       }, 1000);
       return () => clearTimeout(timer);
     }
   }, [currentPlayer, players, phase]);
-
   useEffect(() => {
     if (learningMode && phase === "dealing") {
       toast.info(getGameRules());
     }
   }, [learningMode, phase]);
-
   const handleCardClick = (card: CardType) => {
     if (!trump || phase !== "playing") return;
-    
     const player = players[currentPlayer];
     if (!player || player.isCPU) return;
-    
     if (!isValidPlay(card, player.hand, trickCards, trump)) {
       toast.error("Invalid play - you must follow suit if possible!");
       return;
     }
-
     if (learningMode) {
       const bestPlay = getBestPlay(player.hand, trickCards, trump);
       if (card.id === bestPlay.id) {
@@ -64,65 +69,54 @@ const EuchreGame: React.FC = () => {
         toast.info(`Tip: Consider playing ${bestPlay.rank} of ${bestPlay.suit} instead.`);
       }
     }
-
-    dispatch({ type: "PLAY_CARD", card });
+    dispatch({
+      type: "PLAY_CARD",
+      card
+    });
   };
-
   const handlePass = () => {
-    dispatch({ type: "PASS" });
+    dispatch({
+      type: "PASS"
+    });
   };
-
   const handleHelpRequest = () => {
     if (!learningMode || phase !== "playing") return;
-    
     const player = players[currentPlayer];
     if (!player || player.isCPU) return;
-
     const bestPlay = getBestPlay(player.hand, trickCards, trump);
     toast.info(`Suggestion: Play the ${bestPlay.rank} of ${bestPlay.suit}`);
   };
-
   const handleNewGame = () => {
     localStorage.removeItem("euchre_game_state");
     window.location.reload();
   };
-
   const handleNextTrick = () => {
-    dispatch({ type: "CLEAR_TRICK" });
+    dispatch({
+      type: "CLEAR_TRICK"
+    });
   };
-
   if (phase === "pre-game") {
-    return (
-      <div className="min-h-screen bg-table flex items-center justify-center p-4">
+    return <div className="min-h-screen bg-table flex items-center justify-center p-4">
         <div className="bg-white/90 p-6 md:p-8 rounded-lg shadow-lg max-w-md w-full space-y-6">
           <h1 className="text-xl md:text-2xl font-bold text-center mb-6">Welcome to Euchre!</h1>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <label className="font-medium text-sm md:text-base">Learning Mode</label>
-              <Switch
-                checked={learningMode}
-                onCheckedChange={() => dispatch({ type: "TOGGLE_LEARNING_MODE" })}
-              />
+              <Switch checked={learningMode} onCheckedChange={() => dispatch({
+              type: "TOGGLE_LEARNING_MODE"
+            })} />
             </div>
-            {learningMode && (
-              <div className="space-y-2">
+            {learningMode && <div className="space-y-2">
                 <p className="text-sm text-gray-600 italic">
                   Learning mode enabled! You'll receive tips and explanations as you play.
                 </p>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowRules(true)}
-                >
+                <Button variant="outline" className="w-full" onClick={() => setShowRules(true)}>
                   View Game Rules
                 </Button>
-              </div>
-            )}
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={() => dispatch({ type: "START_GAME" })}
-            >
+              </div>}
+            <Button className="w-full" size="lg" onClick={() => dispatch({
+            type: "START_GAME"
+          })}>
               <Play className="w-5 h-5 mr-2" />
               Let's Play!
             </Button>
@@ -135,73 +129,44 @@ const EuchreGame: React.FC = () => {
               <DialogTitle>Euchre Rules</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 text-sm">
-              {getGameRules().split('\n').filter(Boolean).map((line, i) => (
-                <p key={i}>{line}</p>
-              ))}
+              {getGameRules().split('\n').filter(Boolean).map((line, i) => <p key={i}>{line}</p>)}
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-table p-2 md:p-4 relative">
+  return <div className="min-h-screen bg-table p-2 md:p-4 relative">
       {/* Learning controls - bottom left */}
       <div className="fixed bottom-4 left-4 flex flex-col gap-2">
-        <Button
-          variant="secondary"
-          onClick={handleNewGame}
-          className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg"
-          size={isMobile ? "sm" : "default"}
-        >
+        <Button variant="secondary" onClick={handleNewGame} className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg" size={isMobile ? "sm" : "default"}>
           <RotateCcw className="w-3 h-3 md:w-4 md:h-4" />
           New Game
         </Button>
-        <Button
-          variant="secondary"
-          onClick={() => dispatch({ type: "TOGGLE_LEARNING_MODE" })}
-          className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg"
-          size={isMobile ? "sm" : "default"}
-        >
+        <Button variant="secondary" onClick={() => dispatch({
+        type: "TOGGLE_LEARNING_MODE"
+      })} className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg" size={isMobile ? "sm" : "default"}>
           <Info className="w-3 h-3 md:w-4 md:h-4" />
           {learningMode ? "Disable" : "Enable"} Learning
         </Button>
-        {learningMode && (
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setShowRules(true)}
-              className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg"
-              size={isMobile ? "sm" : "default"}
-            >
+        {learningMode && <>
+            <Button variant="secondary" onClick={() => setShowRules(true)} className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg" size={isMobile ? "sm" : "default"}>
               <Book className="w-3 h-3 md:w-4 md:h-4" />
               Game Rules
             </Button>
-            {phase === "playing" && (
-              <Button
-                variant="secondary"
-                onClick={handleHelpRequest}
-                className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg"
-                size={isMobile ? "sm" : "default"}
-              >
+            {phase === "playing" && <Button variant="secondary" onClick={handleHelpRequest} className="flex items-center gap-2 text-xs md:text-sm bg-white/90 shadow-lg" size={isMobile ? "sm" : "default"}>
                 <HelpCircle className="w-3 h-3 md:w-4 md:h-4" />
                 Help Me
-              </Button>
-            )}
-          </>
-        )}
+              </Button>}
+          </>}
       </div>
       
       {/* Game info - bottom right */}
       <div className="fixed bottom-4 right-4 space-y-2">
-        {trump && (
-          <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm text-center">
+        {trump && <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm text-center">
             <p className="font-bold">Trump</p>
             <p className="text-lg">{trump === "hearts" ? "♥" : trump === "diamonds" ? "♦" : trump === "spades" ? "♠" : "♣"}</p>
             <p className="text-xs text-gray-600 mt-1">Selected by {players[trumpSelector]?.name || "Unknown"}</p>
-          </div>
-        )}
+          </div>}
         <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm">
           <p className="font-bold">Score</p>
           <p>Us: {scores[0]} | Them: {scores[1]}</p>
@@ -210,26 +175,17 @@ const EuchreGame: React.FC = () => {
 
       {/* Player hands and game area */}
       <div className="flex justify-between mb-4 md:mb-8">
-        {(players.slice(1) || []).map((player, i) => (
-          <div key={player.id} className="text-center">
+        {(players.slice(1) || []).map((player, i) => <div key={player.id} className="text-center">
             <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
               <p className="text-white text-xs md:text-base">{player.name}</p>
-              {i + 1 === dealer && (
-                <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">
+              {i + 1 === dealer && <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">
                   Dealer
-                </span>
-              )}
+                </span>}
             </div>
             <div className="flex gap-1 md:gap-2">
-              {player.hand.map((card, cardIndex) => (
-                <div
-                  key={`${player.id}-card-${cardIndex}`}
-                  className="w-8 h-12 md:w-16 md:h-24 bg-card-back rounded-lg shadow-md"
-                />
-              ))}
+              {player.hand.map((card, cardIndex) => <div key={`${player.id}-card-${cardIndex}`} className="w-8 h-12 md:w-16 md:h-24 bg-card-back rounded-lg shadow-md" />)}
             </div>
-          </div>
-        ))}
+          </div>)}
       </div>
 
       {/* Center trick area */}
@@ -237,118 +193,73 @@ const EuchreGame: React.FC = () => {
         <div className="flex flex-col items-center gap-4">
           <div className="flex gap-4 md:gap-8">
             {trickCards.map((card, i) => {
-              const leadingPlayer = ((currentPlayer - trickCards.length) + 4) % 4;
-              const playerIndex = (leadingPlayer + i) % 4;
-              
-              return (
-                <div key={`trick-card-${i}`} className="text-center">
+            const leadingPlayer = (currentPlayer - trickCards.length + 4) % 4;
+            const playerIndex = (leadingPlayer + i) % 4;
+            return <div key={`trick-card-${i}`} className="text-center">
                   <p className="text-white text-xs md:text-sm mb-1">
                     {players[playerIndex]?.name || "Unknown"}
                   </p>
-                  <Card
-                    card={card}
-                    isPlayable={false}
-                    className={`transform transition-all duration-300 ${
-                      isMobile ? "scale-75" : "scale-90"
-                    } animate-card-deal`}
-                  />
-                </div>
-              );
-            })}
+                  <Card card={card} isPlayable={false} className={`transform transition-all duration-300 ${isMobile ? "scale-75" : "scale-90"} animate-card-deal`} />
+                </div>;
+          })}
           </div>
           
           {/* Next Trick Button */}
-          {trickCards.length === 4 && currentPlayer === 0 && (
-            <Button 
-              onClick={handleNextTrick}
-              className="mt-4 bg-white/90 hover:bg-white shadow-lg"
-              size={isMobile ? "sm" : "default"}
-            >
+          {trickCards.length === 4 && currentPlayer === 0 && <Button onClick={handleNextTrick} size={isMobile ? "sm" : "default"} className="mt-4 bg-white/90 hover:bg-white shadow-lg text-slate-950">
               Next Trick
-            </Button>
-          )}
+            </Button>}
         </div>
       </div>
 
       {/* Player's hand area */}
       <div className="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2">
         <div className="flex items-center gap-2 justify-center mb-2">
-          {currentPlayer === 0 && phase === "playing" && (
-            <div className="bg-white/90 px-4 py-1 rounded-md shadow-lg text-base font-bold animate-bounce">
+          {currentPlayer === 0 && phase === "playing" && <div className="bg-white/90 px-4 py-1 rounded-md shadow-lg text-base font-bold animate-bounce">
               It's Your Turn!
-            </div>
-          )}
+            </div>}
           <p className="text-white text-xs md:text-base">Your Hand</p>
-          {dealer === 0 && (
-            <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">
+          {dealer === 0 && <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">
               Dealer
-            </span>
-          )}
+            </span>}
         </div>
         <div className="flex gap-1 md:gap-2 justify-center">
-          {players[0]?.hand?.map((card, index) => (
-            <Card
-              key={`player-card-${index}`}
-              card={card}
-              isPlayable={currentPlayer === 0 && phase === "playing"}
-              onClick={() => handleCardClick(card)}
-            />
-          ))}
+          {players[0]?.hand?.map((card, index) => <Card key={`player-card-${index}`} card={card} isPlayable={currentPlayer === 0 && phase === "playing"} onClick={() => handleCardClick(card)} />)}
         </div>
       </div>
 
       {/* Bidding UI */}
-      {phase === "bidding" && currentPlayer === 0 && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 p-3 md:p-4 rounded-lg shadow-lg animate-fade-in z-30">
+      {phase === "bidding" && currentPlayer === 0 && <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 p-3 md:p-4 rounded-lg shadow-lg animate-fade-in z-30">
           <div className="text-base md:text-lg font-bold mb-2 md:mb-4">
             <p>Select Trump Suit</p>
           </div>
           
           <div className="flex items-center space-x-2 mb-4">
-            <Checkbox
-              id="goAlone"
-              checked={goingAlone}
-              onCheckedChange={(checked: CheckedState) => {
-                if (typeof checked === "boolean") {
-                  setGoingAlone(checked);
-                }
-              }}
-            />
-            <label
-              htmlFor="goAlone"
-              className="text-sm text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
+            <Checkbox id="goAlone" checked={goingAlone} onCheckedChange={(checked: CheckedState) => {
+          if (typeof checked === "boolean") {
+            setGoingAlone(checked);
+          }
+        }} />
+            <label htmlFor="goAlone" className="text-sm text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Go Alone (Your partner sits out, but you'll score more points if you win!)
             </label>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {["hearts", "diamonds", "spades", "clubs"].map((suit) => (
-              <Button
-                key={suit}
-                onClick={() => dispatch({ type: "SET_TRUMP", suit: suit as Suit, goingAlone })}
-                className="h-14 md:h-20 flex items-center justify-center text-xl md:text-2xl"
-                size={isMobile ? "sm" : "default"}
-              >
+            {["hearts", "diamonds", "spades", "clubs"].map(suit => <Button key={suit} onClick={() => dispatch({
+          type: "SET_TRUMP",
+          suit: suit as Suit,
+          goingAlone
+        })} className="h-14 md:h-20 flex items-center justify-center text-xl md:text-2xl" size={isMobile ? "sm" : "default"}>
                 {suit === "hearts" && "♥"}
                 {suit === "diamonds" && "♦"}
                 {suit === "spades" && "♠"}
                 {suit === "clubs" && "♣"}
-              </Button>
-            ))}
-            {currentPlayer !== dealer && (
-              <Button
-                variant="outline"
-                onClick={handlePass}
-                className="col-span-2 mt-2"
-                size={isMobile ? "sm" : "default"}
-              >
+              </Button>)}
+            {currentPlayer !== dealer && <Button variant="outline" onClick={handlePass} className="col-span-2 mt-2" size={isMobile ? "sm" : "default"}>
                 Pass
-              </Button>
-            )}
+              </Button>}
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Rules Dialog */}
       <Dialog open={showRules} onOpenChange={setShowRules}>
@@ -357,14 +268,10 @@ const EuchreGame: React.FC = () => {
             <DialogTitle>Euchre Rules</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 text-sm">
-            {getGameRules().split('\n').filter(Boolean).map((line, i) => (
-              <p key={i}>{line}</p>
-            ))}
+            {getGameRules().split('\n').filter(Boolean).map((line, i) => <p key={i}>{line}</p>)}
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
-
 export default EuchreGame;
