@@ -9,6 +9,7 @@ import { Info, Play, HelpCircle, Book, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { CheckedState } from "@radix-ui/react-checkbox";
 import {
   Dialog,
   DialogContent,
@@ -284,7 +285,12 @@ const EuchreGame: React.FC = () => {
           <div className="flex items-center space-x-2 mb-4">
             <Checkbox
               id="goAlone"
-              onCheckedChange={(checked) => setGoingAlone(checked)}
+              checked={goingAlone}
+              onCheckedChange={(checked: CheckedState) => {
+                if (typeof checked === "boolean") {
+                  setGoingAlone(checked);
+                }
+              }}
             />
             <label
               htmlFor="goAlone"
