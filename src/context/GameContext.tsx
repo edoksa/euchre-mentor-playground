@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, useEffect } from "react";
 import { GameState, Card, Suit, Player } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
@@ -103,7 +102,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (newTrickCards.length === 4) {
         const winner = determineWinner(newTrickCards, state.trump);
         const team = winner % 2;
-        const newScores = [...state.scores];
+        const newScores: [number, number] = [state.scores[0], state.scores[1]];
         newScores[team]++;
 
         newState = {
