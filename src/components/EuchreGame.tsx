@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useGame } from "@/context/GameContext";
 import { type Card as CardType } from "@/types/game";
@@ -6,7 +7,7 @@ import { isValidPlay, getTip } from "@/utils/gameUtils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Info, Play } from "lucide-react";
-import { Toggle } from "@/components/ui/toggle";
+import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const EuchreGame: React.FC = () => {
@@ -15,17 +16,19 @@ const EuchreGame: React.FC = () => {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    dispatch({ type: "DEAL" });
-  }, []);
+    if (phase === "dealing") {
+      dispatch({ type: "DEAL" });
+    }
+  }, [phase]);
 
   useEffect(() => {
-    if (players[currentPlayer].isCPU) {
+    if (players[currentPlayer].isCPU && phase !== "pre-game") {
       const timer = setTimeout(() => {
         dispatch({ type: "CPU_PLAY" });
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [currentPlayer, players]);
+  }, [currentPlayer, players, phase]);
 
   const handleCardClick = (card: CardType) => {
     if (!trump || phase !== "playing") return;
@@ -64,19 +67,17 @@ const EuchreGame: React.FC = () => {
           <h1 className="text-xl md:text-2xl font-bold text-center mb-6">Welcome to Euchre!</h1>
           <div className="flex items-center justify-between mb-4">
             <label className="font-medium text-sm md:text-base">Enable Learning Mode</label>
-            <Toggle
-              pressed={learningMode}
-              onPressedChange={() => dispatch({ type: "TOGGLE_LEARNING_MODE" })}
-            >
-              <Info className="w-4 h-4" />
-            </Toggle>
+            <Switch
+              checked={learningMode}
+              onCheckedChange={() => dispatch({ type: "TOGGLE_LEARNING_MODE" })}
+            />
           </div>
           <Button
             className="w-full"
             onClick={() => dispatch({ type: "START_GAME" })}
           >
             <Play className="w-4 h-4 mr-2" />
-            Start Game
+            Let's Play!
           </Button>
         </div>
       </div>
@@ -85,23 +86,28 @@ const EuchreGame: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-table p-2 md:p-4">
-      <div className="fixed top-2 md:top-4 right-2 md:right-4 flex gap-2 md:gap-4 items-center">
+      {/* Game Controls - Split into left and right corners */}
+      <div className="fixed bottom-2 md:bottom-4 left-2 md:left-4">
         <Button
           variant="outline"
           onClick={() => dispatch({ type: "TOGGLE_LEARNING_MODE" })}
-          className="flex items-center gap-2 text-xs md:text-sm"
+          className="flex items-center gap-2 text-xs md:text-sm bg-white/90"
           size={isMobile ? "sm" : "default"}
         >
           <Info className="w-3 h-3 md:w-4 md:h-4" />
           {learningMode ? "Disable" : "Enable"} Learning
         </Button>
+      </div>
+      
+      <div className="fixed bottom-2 md:bottom-4 right-2 md:right-4">
         <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm">
           <p className="font-bold">Score</p>
           <p>Us: {scores[0]} | Them: {scores[1]}</p>
         </div>
       </div>
 
-      <div className="flex justify-between mb-4 md:mb-8 mt-16 md:mt-0">
+      {/* CPU Players */}
+      <div className="flex justify-between mb-4 md:mb-8">
         {players.slice(1).map((player, i) => (
           <div key={player.id} className="text-center">
             <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
@@ -122,6 +128,7 @@ const EuchreGame: React.FC = () => {
         ))}
       </div>
 
+      {/* Trick Area */}
       <div className="flex justify-center items-center h-32 md:h-48 mb-4 md:mb-8">
         <div className="grid grid-cols-2 gap-2 md:gap-4">
           {trickCards.map((card, i) => (
@@ -135,7 +142,8 @@ const EuchreGame: React.FC = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-2 md:bottom-4 left-1/2 -translate-x-1/2">
+      {/* Player's Hand */}
+      <div className="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2">
         <div className="flex items-center gap-1 md:gap-2 justify-center mb-1 md:mb-2">
           <p className="text-white text-xs md:text-base">Your Hand</p>
           {dealer === 0 && (
@@ -154,6 +162,7 @@ const EuchreGame: React.FC = () => {
         </div>
       </div>
 
+      {/* Bidding UI */}
       {phase === "bidding" && currentPlayer === 0 && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 p-3 md:p-4 rounded-lg shadow-lg animate-fade-in">
           <p className="text-base md:text-lg font-bold mb-2 md:mb-4">Select Trump Suit or Pass</p>
