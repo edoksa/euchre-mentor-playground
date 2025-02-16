@@ -33,10 +33,15 @@ const initialState: GameState = {
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
+  if (!state || !Array.isArray(state.players)) {
+    console.error("Invalid state detected, resetting to initial state");
+    return initialState;
+  }
+
   switch (action.type) {
     case "START_GAME":
       return {
-        ...state,
+        ...initialState,
         phase: "dealing",
         dealer: Math.floor(Math.random() * 4),
       };
@@ -189,14 +194,23 @@ const GameContext = createContext<{
 } | null>(null);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const loadInitialState = () => {
+  const loadInitialState = (): GameState => {
     try {
       const savedState = localStorage.getItem(STORAGE_KEY);
       if (!savedState) return initialState;
+
       const parsedState = JSON.parse(savedState);
+      
+      if (!parsedState || !Array.isArray(parsedState.players)) {
+        console.error("Invalid saved state, using initial state");
+        localStorage.removeItem(STORAGE_KEY);
+        return initialState;
+      }
+
       return parsedState;
     } catch (error) {
       console.error("Error loading game state:", error);
+      localStorage.removeItem(STORAGE_KEY);
       return initialState;
     }
   };
