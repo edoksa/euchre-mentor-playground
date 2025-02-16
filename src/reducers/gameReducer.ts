@@ -1,3 +1,4 @@
+
 import { GameState, Card, Suit } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
 import { toast } from "sonner";
@@ -155,7 +156,8 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         // Calculate the actual winner by adding the winning position to the first player
         const trickWinner = (firstPlayerOfTrick + winningCardPosition) % 4;
         
-        const newScores = [...state.scores];
+        // Create new scores array with explicit type and values
+        const newScores: [number, number] = [state.scores[0], state.scores[1]];
         newScores[trickWinner % 2]++;
 
         console.log('Trick details:', {
