@@ -231,20 +231,25 @@ const EuchreGame: React.FC = () => {
       {/* Center trick area */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
         <div className="flex gap-4 md:gap-8">
-          {trickCards.map((card, i) => (
-            <div key={`trick-card-${i}`} className="text-center">
-              <p className="text-white text-xs md:text-sm mb-1">
-                {players[(currentPlayer - trickCards.length + i + 4) % 4]?.name || "Unknown"}
-              </p>
-              <Card
-                card={card}
-                isPlayable={false}
-                className={`transform transition-all duration-300 ${
-                  isMobile ? "scale-75" : "scale-90"
-                } animate-card-deal`}
-              />
-            </div>
-          ))}
+          {trickCards.map((card, i) => {
+            const firstPlayerOfTrick = ((currentPlayer - (trickCards.length - 1)) + 4) % 4;
+            const playerIndex = (firstPlayerOfTrick + i) % 4;
+            
+            return (
+              <div key={`trick-card-${i}`} className="text-center">
+                <p className="text-white text-xs md:text-sm mb-1">
+                  {players[playerIndex]?.name || "Unknown"}
+                </p>
+                <Card
+                  card={card}
+                  isPlayable={false}
+                  className={`transform transition-all duration-300 ${
+                    isMobile ? "scale-75" : "scale-90"
+                  } animate-card-deal`}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 
