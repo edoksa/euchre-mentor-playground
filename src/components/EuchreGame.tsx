@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
-import { type Card as CardType } from "@/types/game";
+import { type Card as CardType, type Suit } from "@/types/game";
 import Card from "@/components/Card";
 import { isValidPlay, getTip, getGameRules, getBestPlay } from "@/utils/gameUtils";
 import { toast } from "sonner";
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Info, Play, HelpCircle, Book, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ const EuchreGame: React.FC = () => {
   const { players = [], currentPlayer = 0, dealer = 0, trickCards = [], trump, phase = "pre-game", learningMode = false, scores = [0, 0], trumpSelector = 0 } = state || {};
   const isMobile = useIsMobile();
   const [showRules, setShowRules] = useState(false);
+  const [goingAlone, setGoingAlone] = useState(false);
 
   useEffect(() => {
     if (phase === "dealing") {
@@ -278,40 +279,35 @@ const EuchreGame: React.FC = () => {
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 p-3 md:p-4 rounded-lg shadow-lg animate-fade-in z-30">
           <div className="text-base md:text-lg font-bold mb-2 md:mb-4">
             <p>Select Trump Suit</p>
-            <p className="text-sm font-normal text-gray-600 mt-1">
-              You can choose to "Go Alone" - your partner will sit out and you'll play against three opponents.
-              If you win, your team gets extra points!
-            </p>
           </div>
+          
+          <div className="flex items-center space-x-2 mb-4">
+            <Checkbox
+              id="goAlone"
+              onCheckedChange={(checked) => setGoingAlone(checked)}
+            />
+            <label
+              htmlFor="goAlone"
+              className="text-sm text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Go Alone (Your partner sits out, but you'll score more points if you win!)
+            </label>
+          </div>
+
           <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-wrap gap-1 md:gap-2">
-              {["hearts", "diamonds", "spades", "clubs"].map((suit) => (
-                <Button
-                  key={suit}
-                  onClick={() => dispatch({ type: "SET_TRUMP", suit: suit as Suit })}
-                  className="w-14 h-14 md:w-20 md:h-20 flex items-center justify-center text-xl md:text-2xl"
-                  size={isMobile ? "sm" : "default"}
-                >
-                  {suit === "hearts" && "♥"}
-                  {suit === "diamonds" && "♦"}
-                  {suit === "spades" && "♠"}
-                  {suit === "clubs" && "♣"}
-                </Button>
-              ))}
-            </div>
-            <div className="flex flex-col gap-2">
-              {["hearts", "diamonds", "spades", "clubs"].map((suit) => (
-                <Button
-                  key={`alone-${suit}`}
-                  onClick={() => dispatch({ type: "SET_TRUMP", suit: suit as Suit, goingAlone: true })}
-                  variant="secondary"
-                  className="text-sm"
-                  size={isMobile ? "sm" : "default"}
-                >
-                  {suit} - Go Alone
-                </Button>
-              ))}
-            </div>
+            {["hearts", "diamonds", "spades", "clubs"].map((suit) => (
+              <Button
+                key={suit}
+                onClick={() => dispatch({ type: "SET_TRUMP", suit: suit as Suit, goingAlone })}
+                className="h-14 md:h-20 flex items-center justify-center text-xl md:text-2xl"
+                size={isMobile ? "sm" : "default"}
+              >
+                {suit === "hearts" && "♥"}
+                {suit === "diamonds" && "♦"}
+                {suit === "spades" && "♠"}
+                {suit === "clubs" && "♣"}
+              </Button>
+            ))}
             {currentPlayer !== dealer && (
               <Button
                 variant="outline"
