@@ -27,19 +27,31 @@ export const shuffleDeck = (deck: Card[]): Card[] => {
   return newDeck;
 };
 
-export const dealCards = (deck: Card[]): { hands: Card[][]; remainingDeck: Card[] } => {
+export const dealCards = (deck: Card[]) => {
+  if (!deck || deck.length < 20) {
+    console.error("Invalid deck provided for dealing");
+    return null;
+  }
+
   const hands: Card[][] = [[], [], [], []];
-  const newDeck = [...deck];
+  const shuffledDeck = [...deck];
   
   // Deal 5 cards to each player
   for (let i = 0; i < 5; i++) {
     for (let j = 0; j < 4; j++) {
-      const card = newDeck.pop();
-      if (card) hands[j].push(card);
+      if (shuffledDeck.length > 0) {
+        const card = shuffledDeck.pop();
+        if (card) {
+          hands[j].push(card);
+        }
+      }
     }
   }
 
-  return { hands, remainingDeck: newDeck };
+  return {
+    hands,
+    remainingDeck: shuffledDeck
+  };
 };
 
 export const isValidPlay = (card: Card, hand: Card[], trick: Card[], trump: Suit): boolean => {
