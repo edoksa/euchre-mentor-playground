@@ -12,6 +12,7 @@ export type Player = {
   name: string;
   hand: Card[];
   isCPU: boolean;
+  sittingOut?: boolean;
 };
 
 export type GamePhase = "pre-game" | "dealing" | "bidding" | "playing";
@@ -29,4 +30,5 @@ export type GameState = {
   learningMode: boolean;
   passCount: number;
   shouldClearTrick?: boolean;
+  goingAlone?: boolean;
 };

@@ -7,7 +7,7 @@ type GameAction =
   | { type: "START_GAME" }
   | { type: "DEAL" }
   | { type: "PLAY_CARD"; card: Card }
-  | { type: "SET_TRUMP"; suit: Suit }
+  | { type: "SET_TRUMP"; suit: Suit; goingAlone?: boolean }
   | { type: "PASS" }
   | { type: "TOGGLE_LEARNING_MODE" }
   | { type: "CPU_PLAY" }
@@ -29,7 +29,7 @@ const initialState: GameState = {
   learningMode: false,
   passCount: 0,
   trumpSelector: 0,
-  shouldClearTrick: false,
+  goingAlone: false,
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -106,12 +106,25 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
 
     case "SET_TRUMP": {
+      const goingAlone = action.goingAlone || false;
+      const partner = (state.currentPlayer + 2) % 4;
+      
+      if (goingAlone) {
+        const playerName = state.players[state.currentPlayer].name;
+        toast.info(`${playerName} is going alone!`, { duration: 2000 });
+      }
+
       return {
         ...state,
         trump: action.suit,
         trumpSelector: state.currentPlayer,
         phase: "playing",
         currentPlayer: (state.dealer + 1) % 4,
+        goingAlone,
+        players: state.players.map((p, i) => ({
+          ...p,
+          sittingOut: goingAlone && i === partner
+        }))
       };
     }
 
@@ -119,7 +132,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (!state.trump) return state;
 
       const currentPlayer = state.players[state.currentPlayer];
-      if (!currentPlayer || !currentPlayer.hand) return state;
+      if (!currentPlayer || !currentPlayer.hand || currentPlayer.sittingOut) return state;
 
       const newHand = currentPlayer.hand.filter((c) => c.id !== action.card.id);
       const newTrickCards = [...state.trickCards, action.card];
@@ -130,11 +143,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           p.id === currentPlayer.id ? { ...p, hand: newHand } : p
         ),
         trickCards: newTrickCards,
-        currentPlayer: (state.currentPlayer + 1) % 4,
         shouldClearTrick: false,
       };
 
-      if (newTrickCards.length === 4) {
+      // Find next active player
+      let nextPlayer = (state.currentPlayer + 1) % 4;
+      while (state.goingAlone && state.players[nextPlayer].sittingOut) {
+        nextPlayer = (nextPlayer + 1) % 4;
+      }
+      newState.currentPlayer = nextPlayer;
+
+      if (newTrickCards.length === (state.goingAlone ? 3 : 4)) {
         const winner = determineWinner(newTrickCards, state.trump);
         const team = winner % 2;
         const newScores: [number, number] = [...state.scores];
@@ -157,7 +176,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
     case "CPU_PLAY": {
       const cpu = state.players[state.currentPlayer];
-      if (!cpu || !cpu.isCPU || !cpu.hand || state.shouldClearTrick) return state;
+      if (!cpu || !cpu.isCPU || !cpu.hand || state.shouldClearTrick || cpu.sittingOut) return state;
 
       if (state.phase === "bidding") {
         const shouldPass = Math.random() > 0.3;
@@ -166,7 +185,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         } else {
           const suits: Suit[] = ["hearts", "diamonds", "spades", "clubs"];
           const randomSuit = suits[Math.floor(Math.random() * suits.length)];
-          return gameReducer(state, { type: "SET_TRUMP", suit: randomSuit });
+          const goingAlone = Math.random() > 0.8; // 20% chance to go alone
+          return gameReducer(state, { type: "SET_TRUMP", suit: randomSuit, goingAlone });
         }
       }
 

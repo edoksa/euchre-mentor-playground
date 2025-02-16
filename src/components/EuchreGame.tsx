@@ -276,26 +276,47 @@ const EuchreGame: React.FC = () => {
       {/* Bidding UI */}
       {phase === "bidding" && currentPlayer === 0 && (
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 p-3 md:p-4 rounded-lg shadow-lg animate-fade-in z-30">
-          <p className="text-base md:text-lg font-bold mb-2 md:mb-4">Select Trump Suit or Pass</p>
-          <div className="flex gap-1 md:gap-2">
-            {["hearts", "diamonds", "spades", "clubs"].map((suit) => (
-              <Button
-                key={suit}
-                onClick={() => dispatch({ type: "SET_TRUMP", suit: suit as any })}
-                className="w-14 h-14 md:w-20 md:h-20 flex items-center justify-center text-xl md:text-2xl"
-                size={isMobile ? "sm" : "default"}
-              >
-                {suit === "hearts" && "♥"}
-                {suit === "diamonds" && "♦"}
-                {suit === "spades" && "♠"}
-                {suit === "clubs" && "♣"}
-              </Button>
-            ))}
+          <div className="text-base md:text-lg font-bold mb-2 md:mb-4">
+            <p>Select Trump Suit</p>
+            <p className="text-sm font-normal text-gray-600 mt-1">
+              You can choose to "Go Alone" - your partner will sit out and you'll play against three opponents.
+              If you win, your team gets extra points!
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-wrap gap-1 md:gap-2">
+              {["hearts", "diamonds", "spades", "clubs"].map((suit) => (
+                <Button
+                  key={suit}
+                  onClick={() => dispatch({ type: "SET_TRUMP", suit: suit as Suit })}
+                  className="w-14 h-14 md:w-20 md:h-20 flex items-center justify-center text-xl md:text-2xl"
+                  size={isMobile ? "sm" : "default"}
+                >
+                  {suit === "hearts" && "♥"}
+                  {suit === "diamonds" && "♦"}
+                  {suit === "spades" && "♠"}
+                  {suit === "clubs" && "♣"}
+                </Button>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2">
+              {["hearts", "diamonds", "spades", "clubs"].map((suit) => (
+                <Button
+                  key={`alone-${suit}`}
+                  onClick={() => dispatch({ type: "SET_TRUMP", suit: suit as Suit, goingAlone: true })}
+                  variant="secondary"
+                  className="text-sm"
+                  size={isMobile ? "sm" : "default"}
+                >
+                  {suit} - Go Alone
+                </Button>
+              ))}
+            </div>
             {currentPlayer !== dealer && (
               <Button
                 variant="outline"
                 onClick={handlePass}
-                className="w-14 h-14 md:w-20 md:h-20 text-sm md:text-base"
+                className="col-span-2 mt-2"
                 size={isMobile ? "sm" : "default"}
               >
                 Pass
