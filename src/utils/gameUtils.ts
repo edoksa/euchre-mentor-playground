@@ -78,8 +78,12 @@ export const getTip = (
 ): string => {
   if (phase === "bidding") {
     const trumpCards = hand.filter((c) => c.suit === trump);
-    if (trumpCards.length >= 3) return "You have a strong trump hand - consider ordering it up!";
-    return "Your hand is weak in trump - you might want to pass.";
+    if (trumpCards.length >= 3) {
+      const highTrumpCount = trumpCards.filter((c) => ["A", "K", "Q", "J"].includes(c.rank)).length;
+      if (highTrumpCount >= 2) return "Strong trump hand - consider ordering it up!";
+      return "Moderate trump hand - your call on ordering up.";
+    }
+    return "Weak trump hand - you might want to pass.";
   }
 
   if (trick.length === 0) {
@@ -90,8 +94,11 @@ export const getTip = (
 
   const leadSuit = trick[0].suit;
   const followingSuit = hand.filter((c) => c.suit === leadSuit);
+  
   if (followingSuit.length > 0) {
-    return "You must follow suit if you can.";
+    const highFollow = followingSuit.filter((c) => ["A", "K", "J"].includes(c.rank));
+    if (highFollow.length > 0) return "You have high cards in the led suit - consider winning the trick!";
+    return "You must follow suit - play your lowest card if you can't win.";
   }
 
   const trumpCards = hand.filter((c) => c.suit === trump);
@@ -100,4 +107,51 @@ export const getTip = (
   }
 
   return "You can't follow suit or trump - discard a low card.";
+};
+
+export const getGameRules = (): string => {
+  return `
+Euchre is a trick-taking card game played with 24 cards (9 through Ace).
+- Teams of 2 players compete to win tricks
+- First team to 10 points wins
+- Trump suit makes cards of that suit more powerful
+- Must follow suit if possible
+- Highest trump card wins, or highest card of led suit if no trump played
+- Each trick won counts as 1 point
+- Making all 5 tricks (march) scores 2 points
+  `;
+};
+
+export const getBestPlay = (hand: Card[], trick: Card[], trump: Suit): Card => {
+  if (trick.length === 0) {
+    // Leading - play highest non-trump if possible
+    const nonTrump = hand.filter(c => c.suit !== trump);
+    if (nonTrump.length > 0) {
+      return nonTrump.reduce((highest, card) => 
+        RANKS.indexOf(card.rank) > RANKS.indexOf(highest.rank) ? card : highest
+      );
+    }
+    return hand[0]; // Play any card if only trump remains
+  }
+
+  const leadSuit = trick[0].suit;
+  const followingSuit = hand.filter(c => c.suit === leadSuit);
+  
+  if (followingSuit.length > 0) {
+    // Must follow suit - play highest if we can win, lowest if we can't
+    return followingSuit.reduce((best, card) => 
+      RANKS.indexOf(card.rank) > RANKS.indexOf(best.rank) ? card : best
+    );
+  }
+
+  const trumpCards = hand.filter(c => c.suit === trump);
+  if (trumpCards.length > 0) {
+    // Can't follow suit but have trump - play lowest trump that can win
+    return trumpCards[0];
+  }
+
+  // Can't follow suit or trump - play lowest card
+  return hand.reduce((lowest, card) => 
+    RANKS.indexOf(card.rank) < RANKS.indexOf(lowest.rank) ? card : lowest
+  );
 };

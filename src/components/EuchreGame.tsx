@@ -1,19 +1,26 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { type Card as CardType } from "@/types/game";
 import Card from "./Card";
-import { isValidPlay, getTip } from "@/utils/gameUtils";
+import { isValidPlay, getTip, getGameRules, getBestPlay } from "@/utils/gameUtils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Info, Play } from "lucide-react";
+import { Info, Play, HelpCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const EuchreGame: React.FC = () => {
   const { state, dispatch } = useGame();
   const { players, currentPlayer, dealer, trickCards, trump, phase, learningMode, scores } = state;
   const isMobile = useIsMobile();
+  const [showRules, setShowRules] = useState(false);
 
   useEffect(() => {
     if (phase === "dealing") {
@@ -30,6 +37,12 @@ const EuchreGame: React.FC = () => {
     }
   }, [currentPlayer, players, phase]);
 
+  useEffect(() => {
+    if (learningMode && phase === "dealing") {
+      toast.info(getGameRules());
+    }
+  }, [learningMode, phase]);
+
   const handleCardClick = (card: CardType) => {
     if (!trump || phase !== "playing") return;
     
@@ -42,8 +55,12 @@ const EuchreGame: React.FC = () => {
     }
 
     if (learningMode) {
-      const tip = getTip(player.hand, trickCards, trump, phase);
-      toast.info(tip);
+      const bestPlay = getBestPlay(player.hand, trickCards, trump);
+      if (card.id === bestPlay.id) {
+        toast.success("Great play! That was the optimal choice.");
+      } else {
+        toast.info(`Tip: Consider playing ${bestPlay.rank} of ${bestPlay.suit} instead.`);
+      }
     }
 
     dispatch({ type: "PLAY_CARD", card });
@@ -51,6 +68,16 @@ const EuchreGame: React.FC = () => {
 
   const handlePass = () => {
     dispatch({ type: "PASS" });
+  };
+
+  const handleHelpRequest = () => {
+    if (!learningMode || phase !== "playing") return;
+    
+    const player = players[currentPlayer];
+    if (!player || player.isCPU) return;
+
+    const bestPlay = getBestPlay(player.hand, trickCards, trump);
+    toast.info(`Suggestion: Play the ${bestPlay.rank} of ${bestPlay.suit}`);
   };
 
   if (phase === "pre-game") {
@@ -67,9 +94,18 @@ const EuchreGame: React.FC = () => {
               />
             </div>
             {learningMode && (
-              <p className="text-sm text-gray-600 italic">
-                Learning mode enabled! You'll receive tips and explanations as you play.
-              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600 italic">
+                  Learning mode enabled! You'll receive tips and explanations as you play.
+                </p>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowRules(true)}
+                >
+                  View Game Rules
+                </Button>
+              </div>
             )}
             <Button
               className="w-full"
@@ -86,9 +122,9 @@ const EuchreGame: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-table p-2 md:p-4">
+    <div className="min-h-screen bg-table p-2 md:p-4 relative">
       {/* Game Controls */}
-      <div className="fixed bottom-2 md:bottom-4 left-2 md:left-4">
+      <div className="fixed top-2 md:top-4 left-2 md:left-4 flex flex-col gap-2">
         <Button
           variant="outline"
           onClick={() => dispatch({ type: "TOGGLE_LEARNING_MODE" })}
@@ -98,14 +134,37 @@ const EuchreGame: React.FC = () => {
           <Info className="w-3 h-3 md:w-4 md:h-4" />
           {learningMode ? "Disable" : "Enable"} Learning
         </Button>
+        {learningMode && phase === "playing" && currentPlayer === 0 && (
+          <Button
+            variant="outline"
+            onClick={handleHelpRequest}
+            className="flex items-center gap-2 text-xs md:text-sm bg-white/90"
+            size={isMobile ? "sm" : "default"}
+          >
+            <HelpCircle className="w-3 h-3 md:w-4 md:h-4" />
+            Help Me
+          </Button>
+        )}
       </div>
       
-      <div className="fixed bottom-2 md:bottom-4 right-2 md:right-4">
+      <div className="fixed top-2 md:top-4 right-2 md:right-4 space-y-2">
+        {trump && (
+          <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm text-center">
+            <p className="font-bold">Trump</p>
+            <p className="text-lg">{trump === "hearts" ? "♥" : trump === "diamonds" ? "♦" : trump === "spades" ? "♠" : "♣"}</p>
+          </div>
+        )}
         <div className="bg-white/90 p-2 rounded-lg shadow-lg text-xs md:text-sm">
           <p className="font-bold">Score</p>
           <p>Us: {scores[0]} | Them: {scores[1]}</p>
         </div>
       </div>
+
+      {currentPlayer === 0 && phase === "playing" && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 px-4 py-2 rounded-full shadow-lg text-lg font-bold animate-bounce">
+          It's Your Turn!
+        </div>
+      )}
 
       {phase !== "pre-game" && players && (
         <>
@@ -133,16 +192,22 @@ const EuchreGame: React.FC = () => {
             ))}
           </div>
 
-          {/* Trick Area */}
-          <div className="flex justify-center items-center h-32 md:h-48 mb-4 md:mb-8">
-            <div className="grid grid-cols-2 gap-2 md:gap-4">
+          {/* Trick Area - Centered */}
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="flex gap-4 md:gap-8">
               {trickCards.map((card, i) => (
-                <Card
-                  key={`trick-card-${i}`}
-                  card={card}
-                  isPlayable={false}
-                  className={isMobile ? "transform scale-75" : "transform scale-90"}
-                />
+                <div key={`trick-card-${i}`} className="text-center">
+                  <p className="text-white text-xs md:text-sm mb-1">
+                    {players[(currentPlayer - trickCards.length + i + 4) % 4].name}
+                  </p>
+                  <Card
+                    card={card}
+                    isPlayable={false}
+                    className={`transform transition-all duration-300 ${
+                      isMobile ? "scale-75" : "scale-90"
+                    } animate-card-deal`}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -202,6 +267,20 @@ const EuchreGame: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Rules Dialog */}
+      <Dialog open={showRules} onOpenChange={setShowRules}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Euchre Rules</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            {getGameRules().split('\n').map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

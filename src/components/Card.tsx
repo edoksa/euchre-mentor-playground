@@ -34,12 +34,12 @@ const Card: React.FC<CardProps> = ({
     <div
       onClick={isPlayable ? onClick : undefined}
       className={cn(
-        "relative bg-white rounded-lg shadow-md transition-all duration-200",
+        "relative bg-white rounded-lg shadow-md transition-all duration-300",
         "hover:shadow-lg cursor-pointer select-none",
         isPlayable && "hover:animate-card-hover",
         isSelected && "-translate-y-4",
-        !isPlayable && "opacity-70 cursor-not-allowed",
-        "animate-card-deal",
+        !isPlayable && "opacity-90",
+        isPlayable ? "cursor-pointer hover:-translate-y-2" : "cursor-not-allowed",
         isMobile ? "w-16 h-24" : "w-24 h-36",
         className
       )}
