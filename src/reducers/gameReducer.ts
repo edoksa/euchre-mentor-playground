@@ -1,4 +1,3 @@
-
 import { GameState, Card, Suit } from "@/types/game";
 import { createDeck, dealCards, isValidPlay, determineWinner } from "@/utils/gameUtils";
 import { toast } from "sonner";
@@ -154,20 +153,19 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         newScores[team]++;
 
         // Calculate who actually won based on the starting position
-        const leadPlayer = state.trickCards.length === 0 ? state.currentPlayer : 
-          (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
+        const leadPlayer = (state.currentPlayer - (newTrickCards.length - 1) + 4) % 4;
         const winnerActualPosition = (leadPlayer + winner) % 4;
-
-        newState = {
-          ...newState,
-          scores: newScores,
-          currentPlayer: winnerActualPosition, // Set winner as next lead player
-          shouldClearTrick: true,
-        };
 
         toast.success(`${state.players[winnerActualPosition].name} wins the trick!`, {
           duration: 1500,
         });
+
+        newState = {
+          ...newState,
+          scores: newScores,
+          currentPlayer: winnerActualPosition, // Winner will lead the next trick
+          shouldClearTrick: true,
+        };
       } else {
         // If trick isn't complete, move to next active player
         let nextPlayer = (state.currentPlayer + 1) % 4;
