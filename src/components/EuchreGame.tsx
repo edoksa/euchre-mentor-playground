@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Info, Play, HelpCircle, Book, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Checkbox } from "@/components/ui/checkbox";
-import type { CheckedState } from "@radix-ui/react-checkbox";
+// import { Checkbox } from "@/components/ui/checkbox"; // No longer directly used here
+// import type { CheckedState } from "@radix-ui/react-checkbox"; // No longer directly used here
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import BiddingPanel from "@/components/game/BiddingPanel";
+import PlayerHand from "@/components/game/PlayerHand";
+
 const EuchreGame: React.FC = () => {
   const {
     state,
@@ -18,8 +21,8 @@ const EuchreGame: React.FC = () => {
   } = useGame();
   const {
     players = [],
-    currentPlayer = 0,
-    dealer = 0,
+    currentPlayer = 0, // This is the index of the current player
+    dealer = 0, // This is the index of the dealer
     trickCards = [],
     trump,
     phase = "pre-game",
@@ -30,7 +33,11 @@ const EuchreGame: React.FC = () => {
   } = state || {};
   const isMobile = useIsMobile();
   const [showRules, setShowRules] = useState(false);
-  const [goingAlone, setGoingAlone] = useState(false);
+  // const [goingAlone, setGoingAlone] = useState(false); // Moved to BiddingPanel
+
+  // Determine the human player's ID (assuming player at index 0 is human)
+  const humanPlayerId = players[0]?.id; // Example: "p1"
+
   useEffect(() => {
     if (phase === "dealing") {
       dispatch({
@@ -74,11 +81,23 @@ const EuchreGame: React.FC = () => {
       card
     });
   };
+
+  // Callback for BiddingPanel when a trump suit is set
+  const handleSetTrump = (suit: Suit, isGoingAlone: boolean) => {
+    dispatch({
+      type: "SET_TRUMP",
+      suit,
+      goingAlone: isGoingAlone,
+    });
+  };
+
+  // Callback for BiddingPanel when player passes
   const handlePass = () => {
     dispatch({
       type: "PASS"
     });
   };
+
   const handleHelpRequest = () => {
     if (!learningMode || phase !== "playing") return;
     const player = players[currentPlayer];
@@ -211,55 +230,33 @@ const EuchreGame: React.FC = () => {
         </div>
       </div>
 
-      {/* Player's hand area */}
-      <div className="fixed bottom-16 md:bottom-20 left-1/2 -translate-x-1/2">
-        <div className="flex items-center gap-2 justify-center mb-2">
-          {currentPlayer === 0 && phase === "playing" && <div className="bg-white/90 px-4 py-1 rounded-md shadow-lg text-base font-bold animate-bounce">
-              It's Your Turn!
-            </div>}
-          <p className="text-white text-xs md:text-base">Your Hand</p>
-          {dealer === 0 && <span className="bg-yellow-500 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded">
-              Dealer
-            </span>}
-        </div>
-        <div className="flex gap-1 md:gap-2 justify-center">
-          {players[0]?.hand?.map((card, index) => <Card key={`player-card-${index}`} card={card} isPlayable={currentPlayer === 0 && phase === "playing"} onClick={() => handleCardClick(card)} />)}
-        </div>
-      </div>
+      {/* Player's hand area - Replaced with PlayerHand component */}
+      {players[0] && humanPlayerId && (
+        <PlayerHand
+          hand={players[0].hand}
+          isCurrentPlayer={currentPlayer === 0} // Assuming player 0 is human
+          onCardClick={handleCardClick}
+          phase={phase}
+          playerId={humanPlayerId}
+          dealerId={players[dealer]?.id}
+          isHumanPlayer={true}
+          isMobile={isMobile}
+        />
+      )}
 
-      {/* Bidding UI */}
-      {phase === "bidding" && currentPlayer === 0 && <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/90 p-3 md:p-4 rounded-lg shadow-lg animate-fade-in z-30">
-          <div className="text-base md:text-lg font-bold mb-2 md:mb-4">
-            <p>Select Trump Suit</p>
-          </div>
-          
-          <div className="flex items-center space-x-2 mb-4">
-            <Checkbox id="goAlone" checked={goingAlone} onCheckedChange={(checked: CheckedState) => {
-          if (typeof checked === "boolean") {
-            setGoingAlone(checked);
-          }
-        }} />
-            <label htmlFor="goAlone" className="text-sm text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Go Alone (Your partner sits out, but you'll score more points if you win!)
-            </label>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            {["hearts", "diamonds", "spades", "clubs"].map(suit => <Button key={suit} onClick={() => dispatch({
-          type: "SET_TRUMP",
-          suit: suit as Suit,
-          goingAlone
-        })} className="h-14 md:h-20 flex items-center justify-center text-xl md:text-2xl" size={isMobile ? "sm" : "default"}>
-                {suit === "hearts" && "♥"}
-                {suit === "diamonds" && "♦"}
-                {suit === "spades" && "♠"}
-                {suit === "clubs" && "♣"}
-              </Button>)}
-            {currentPlayer !== dealer && <Button variant="outline" onClick={handlePass} className="col-span-2 mt-2" size={isMobile ? "sm" : "default"}>
-                Pass
-              </Button>}
-          </div>
-        </div>}
+      {/* Bidding UI - Replaced with BiddingPanel component */}
+      {/* Ensure humanPlayerId and players[currentPlayer] are valid before rendering */}
+      {humanPlayerId && players[currentPlayer] && (
+          <BiddingPanel
+            phase={phase}
+            currentPlayerId={players[currentPlayer].id}
+            dealerId={players[dealer]?.id}
+            onSetTrump={handleSetTrump}
+            onPass={handlePass}
+            isMobile={isMobile}
+            isHumanPlayerTurn={currentPlayer === 0 && !players[currentPlayer].isCPU} // Player 0 is human and it's their turn
+          />
+      )}
 
       {/* Rules Dialog */}
       <Dialog open={showRules} onOpenChange={setShowRules}>

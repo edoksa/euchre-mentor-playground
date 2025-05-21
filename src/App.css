@@ -2,9 +2,17 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  /* text-align: center; */ /* Broadly applying text-align: center can be problematic. Prefer Tailwind utilities like text-center where needed. */
 }
 
+/*
+  The following styles (.logo, .card, .read-the-docs, and logo animations)
+  are likely remnants from the default Vite/Create React App template
+  and are probably not used in the Euchre game application.
+  They are commented out for now and can be removed if confirmed unused.
+*/
+
+/*
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -32,11 +40,16 @@
     animation: logo-spin infinite 20s linear;
   }
 }
+*/
 
+/*
 .card {
   padding: 2em;
 }
+*/
 
+/*
 .read-the-docs {
   color: #888;
 }
+*/
